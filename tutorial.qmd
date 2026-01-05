@@ -1640,6 +1640,10 @@ In particular, it enables the examination of moderator effects on both the mean 
 In the present heteroscedastic meta-regression, the random-effects structure `~ Org.fertilizer.type | effect_size_ID` allows residual heterogeneity at the effect-size level to differ across fertiliser types. 
 By specifying `struct = "DIAG"`, the model estimates fertiliser-type-specific variances without assuming covariance between categories, thereby relaxing the assumption of homogeneous residual variability while retaining a parsimonious specification.
 
+:::callout-tip
+We used this heteroscedastic meta-regression models for figures 3A and 3B in the main text.
+:::
+
 #### lnRR
 
 ```{r}
@@ -2075,7 +2079,10 @@ Thus, while the expected magnitude of the stability gap (lnCVR) is broadly simil
 
 The models presented here extend the basic location–scale meta-regression by allowing study-level heterogeneity to operate not only on the mean effect size, but also on the residual variance.
 
-These models are included for completeness and to illustrate the flexibility of `brms`. In practice, they are often difficult to fit reliably and should be treated as advanced extensions rather than default choices. Accordingly, we provide example code but do not interpret the results in detail. If you want to see the examples, please refer to this [online tutorial](https://ayumi-495.github.io/Eco_location-scale_model/).
+These models are included for completeness and to illustrate the flexibility of `brms`. In practice, they are often difficult to fit reliably and should be treated as advanced extensions rather than default choices. Accordingly, we provide example code but do not interpret the results in detail.
+
+For transparency, examples in which the models were run but failed to converge are also documented in this [online tutorial](https://itchyshin.github.io/location-scale_meta-analysis/). 
+You can also find more examples of complex location-scale models in another [online tutorial](https://ayumi-495.github.io/Eco_location-scale_model/), though these are not specific to meta-analysis.
 
 **2. with random effects in scale component**
 
