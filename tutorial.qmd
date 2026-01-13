@@ -76,7 +76,7 @@ To do meta-analysis with `glmmTMB`, we need to install a development version of 
 ```{r}
 #| eval: false
 # build package from branch: 
-# probably remove this
+# probably remove section when we publish this tutorial
 remove.packages("glmmTMB")  ## if you have already installed glmmTMB
 
 remotes::install_github("coraliewilliams/glmmTMB", ref = "equalto_covstruc", 
@@ -85,8 +85,11 @@ remotes::install_github("coraliewilliams/glmmTMB", ref = "equalto_covstruc",
 glmmTMB:::.valid_covstruct ## check the available covstruc (you should see equalto)
 ```
 
+Also, we have created a custom function for visualising the outputs of meta-analysis models fitted in `brms` If you are interested, please expand the folded code below to view it.
+
 ```{r}
 #| echo: false
+#| code-fold: true
 
 library(patchwork)
 get_variables_dynamic <- function(model, patterns) {
@@ -204,6 +207,8 @@ visualize_random_effects2 <- function(model) {
 }
 
 ```
+
+All the outputs from the code chunks are saved in the Google drive folder (URL) to speed up the rendering process of this tutorial. If you want to run all the code chunks by yourself, please set `eval: true` for those code chunks with `eval: false`.
 
 ### Data preparation
 
@@ -2299,127 +2304,6 @@ glmm_lnRR2 <- glmmTMB(lnRR ~ 1 + Org.fertilizer.type + (1 | study_ID) +
                       dispformula = ~ 1 + Org.fertilizer.type + (1 | study_ID),
                       data = dat,
                       REML = TRUE)
-```
-
-# Gallary
-
-Sometimes, visualising the outputs of meta-analysis models can be challenging, especially for `brms` models. Here, we show the scripts of visualisations for the meta-analysis and meta-regression models fitted using `brms`.
-
-```{r}
-get_variables_dynamic <- function(model, patterns) {
-  variables <- get_variables(model)
-  idx <- unique(unlist(lapply(patterns, function(p) grep(p, variables))))
-  if (length(idx) == 0) return(character(0))
-  variables[idx]
-}
-
-# preparation
-rename_vars <- function(variable) {
-  # fixed effects
-  variable <- gsub("b_Intercept", "b_l_intercept", variable)
-  variable <- gsub("b_sigma_Intercept", "b_s_intercept", variable)  
-  variable <- gsub("b_Org.fertilizer.typeplant", "b_l_contrast", variable)
-  variable <- gsub("b_sigma_Org.fertilizer.typeplant", "b_s_contrast", variable)            
-  # random effects
-  variable <- gsub("sd_study_ID__Intercept", "sd_study_ID", variable)  
-  variable <- gsub("sigma", "sd_effect_ID", variable)  
-  return(variable)
-}
-
-# Function to visualise fixed effects
-visualize_fixed_effects <- function(model) {
-  fixed_effect_vars <- get_variables_dynamic(model, "^b_")
-  if (length(fixed_effect_vars) == 0) {
-    message("No fixed effects found")
-    return(NULL)
-  }
-  
-  tryCatch({
-    fixed_effects_samples <- model %>%
-      spread_draws(!!!syms(fixed_effect_vars)) %>%
-      pivot_longer(cols = all_of(fixed_effect_vars), names_to = ".variable", values_to = ".value") %>%
-      mutate(.variable = rename_vars(.variable))
-    
-    ggplot(fixed_effects_samples, aes(x = .value, y = .variable)) +
-      stat_halfeye(
-        normalize = "xy", 
-        point_interval = "mean_qi", 
-        fill = "lightcyan3", 
-        color = "lightcyan4"
-      ) +
-      geom_vline(xintercept = 0, linetype = "dashed", color = "#005") +
-      labs(y = "Fixed effects", x = "Posterior values") +
-      theme_classic()
-  }, error = function(e) {
-    message("Error in visualize_fixed_effects: ", e$message)
-    return(NULL)
-  })
-}
-
-# Function to visualize random effects
-visualize_random_effects <- function(model) {
-  random_effect_vars <- get_variables_dynamic(model, c("^sd_study", "^sigma"))
-  #random_effect_vars <- random_effect_vars[random_effect_vars != "sd_es_ID__Intercept"]
-  if (length(random_effect_vars) == 0) {
-    message("No random effects found")
-    return(NULL)
-  }
-  
-  tryCatch({
-    random_effects_samples <- model %>%
-      spread_draws(!!!syms(random_effect_vars)) %>%
-      pivot_longer(cols = all_of(random_effect_vars), names_to = ".variable", values_to = ".value") %>%
-      mutate(.variable = rename_vars(.variable)) #%>%
-    #mutate(.value = .value)  # leave SD as it is
-    
-    ggplot(random_effects_samples, aes(x = .value, y = .variable)) +
-      stat_halfeye(
-        normalize = "xy", 
-        point_interval = "mean_qi", 
-        fill = "olivedrab3", 
-        color = "olivedrab4"
-      ) +
-      geom_vline(xintercept = 0, linetype = "dashed", color = "#005") +
-      labs(y = "Random effects (SD)", x = "Posterior values") +
-      theme_classic()
-  }, error = function(e) {
-    message("Error in visualize_random_effects: ", e$message)
-    return(NULL)
-  })
-}
-
-# Function to visualize random effects
-visualize_random_effects2 <- function(model) {
-  random_effect_vars <- get_variables_dynamic(model, c("^sd_study"))
-  #random_effect_vars <- random_effect_vars[random_effect_vars != "sd_es_ID__Intercept"]
-  if (length(random_effect_vars) == 0) {
-    message("No random effects found")
-    return(NULL)
-  }
-  
-  tryCatch({
-    random_effects_samples <- model %>%
-      spread_draws(!!!syms(random_effect_vars)) %>%
-      pivot_longer(cols = all_of(random_effect_vars), names_to = ".variable", values_to = ".value") %>%
-      mutate(.variable = rename_vars(.variable)) #%>%
-    #mutate(.value = .value)  # leave SD as it is
-    
-    ggplot(random_effects_samples, aes(x = .value, y = .variable)) +
-      stat_halfeye(
-        normalize = "xy", 
-        point_interval = "mean_qi", 
-        fill = "olivedrab3", 
-        color = "olivedrab4"
-      ) +
-      geom_vline(xintercept = 0, linetype = "dashed", color = "#005") +
-      labs(y = "Random effects (SD)", x = "Posterior values") +
-      theme_classic()
-  }, error = function(e) {
-    message("Error in visualize_random_effects: ", e$message)
-    return(NULL)
-  })
-}
-
 ```
 
 # Software and package versions
