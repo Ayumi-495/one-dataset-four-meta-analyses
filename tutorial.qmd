@@ -1,5 +1,5 @@
 ---
-title: "Tutorial"
+title: "TUTORIAL: One dataset, four meta-analyses: synthesising mean effects, within-population variability, and between-population heterogeneity in ecology"
 date: "`r Sys.Date()`"
 # author: "AM, CW, HL, ML, SN"
 format: 
@@ -36,9 +36,18 @@ execute:
   tidy: true
 ---
 
+<!-- Citation info!! -->
+
+# Intended audience and scope of this tutorial
+This tutorial is intended for researchers who already have a basic understanding of meta-analysis and some familiarity with statistical modelling in `R`. 
+It is aimed at readers who wish to develop practical skills in location–scale meta-analytic modelling, using standard meta-analytic models as a foundation for understanding how mean effects and variability can be jointly analysed.
+
+The scope of this tutorial is deliberately focused on conceptual comparison and practical illustration rather than exhaustive coverage. We do not provide an introduction to meta-analytic theory, effect size calculation, or general R programming, as these topics are well covered elsewhere. Instead, the tutorial uses a single dataset to demonstrate four complementary meta-analytic perspectives, highlighting their assumptions, strengths, and limitations.
+
 # Introduction
 
 This online tutorial walks you through each step of meta-analysis and location-scale meta-regression using three `R` packages: `metafor`, `brms`, and `glmmTMB`. With one real dataset, we show how to analyse mean effects, within-population variability, and context-dependent heterogeneity, from data preparation through model interpretation.
+
 
 Detailed methodological explanations and additional examples are beyond the scope of this tutorial - readers interested in further details may find the following website and relevant papers helpful:
 
@@ -211,14 +220,15 @@ All the outputs from the code chunks are saved in the Google drive folder (URL) 
 
 ### Data preparation
 
-We use the dataset from Ponisio et al. (2015). First, we load the dataset and prepare it for the analyses.
+We use a dataset from Ponisio et al. (2015), which synthesises experimental studies comparing organic and conventional crop yields across a wide range of crop types, management practices, and geographic regions. The full meta-dataset comprises over 1,000 organic–conventional yield comparisons drawn from more than 100 primary studies; detailed metadata, inclusion criteria, and data descriptions are provided in the original publication and its associated supplementary materials.  
+A subset of the data is used here to facilitate computation and clarity of presentation while preserving the essential structure of the dataset
 
 ```{r}
+
 datfull <- read.csv(here::here("data", "ponisio2014dataset.csv"), header = TRUE)
 # dim(datfull)
-# [1] 1071   72 -> 1071 effect sizes and 72 columns
+# [1] 1071   70 -> 1071 effect sizes and 70 columns
 # head(datfull)　# check column names
-
 # create ID using Author + Year + Journal - gives unique identifier for each study
 datfull$study_ID <- as.numeric(as.factor(paste(datfull$Author, datfull$Year, datfull$Journal, sep = "_")))
 datfull$effect_size_ID <- 1:nrow(datfull)
@@ -226,8 +236,8 @@ datfull$effect_size_ID <- 1:nrow(datfull)
 # filter to the analysis subset
 # Org.fertilizer.type = either plant or animal and also Crop.type = cereals
 dat <- datfull %>%
-  filter(Org.fertilizer.type %in% c("plant", "animal")) %>%
-  filter(Crop.type == "cereals") %>%
+ dplyr::filter(Org.fertilizer.type %in% c("plant", "animal")) %>%
+ dplyr::filter(Crop.type == "cereals") %>%
   droplevels()
 
 # dim(dat) # 318 effect sizes
@@ -236,7 +246,7 @@ dat <- datfull %>%
 
 ### Effect size calculation
 
-Original study calculated and used log response ratio (lnRR) and its variance - we need to get log variance ratio (lnVR) and log coefficient of variation ratio (lnCVR), respectively. `metafor` has a function `escalc` to calculate various effect sizes including lnVR and lnCVR.
+Original study calculated and used log response ratio (lnRR) and its variance. We will also calculate log variance ratio (lnVR) and log coefficient of variation ratio (lnCVR), and their variances, respectively. `metafor` has a function `escalc` to calculate various effect sizes including lnVR and lnCVR.
 
 ```{r}
 
@@ -266,7 +276,7 @@ dat <- escalc(measure = "CVR",
 
 # Model 1: Meta-analysis of mean
 
-Okay, let's start with a standard meta-analysis. We fit multilevel meta-analysis and meta-regression models to estimate the overall mean effect size (**lnRR**). Effect sizes were modelled as the response variable, with random intercepts specified for study identity and effect-size identity to account for the hierarchical structure of the data and non-independence among observations.
+We will first fit multilevel meta-analysis and meta-regression models to estimate the overall mean effect size using lnRR effect size. We will model effect sizes as the response variable, with random intercepts specified for study identity and effect-size identity to account for the hierarchical structure of the data and non-independence among observations.
 
 ## metafor
 
@@ -324,11 +334,11 @@ orchard_ma_lnRR
 
 ```
 
-The estimated average effect size was negative: $\beta_0$ = -0.32, 95\% confidence interval, CI = [-0.43, -0.22]), indicating that organic farming reduced crop yield by approximately 27% compared to conventional farming (exp(-0.32) = 0.73). There was also high heterogeneity among effect sizes ($I^2_{\text{Total}}$ = 98.11%), with contribution s from both the study level and the effect size level ($I^2_{\text{between}}$ = 46.09, $I^2_{\text{within}}$ = 52.02). This indicates that effect sizes vary widely across studies as well as effect sizes…
+The estimated average effect size was negative: $\beta_0$ = -0.32, 95\% confidence interval, CI = [-0.43, -0.22]), indicating that organic farming reduced crop yield by approximately 27% compared to conventional farming (1- exp(-0.32) = 1- 0.73). There was also high heterogeneity among effect sizes ($I^2_{\text{Total}}$ = 98.11%), with contributions from both the study level and the effect size level ($I^2_{\text{between}}$ = 46.09%, $I^2_{\text{within}}$ = 52.02%). This indicates that effect sizes vary widely across studies as well as within studies.
 
 ### meta-regression
 
-Next, we fit a simple meta-regression to examine the type of fertiliser (animal vs plant) explains variation in mean effect sizes.
+Next, we fit a simple meta-regression to examine the type of fertiliser  (animal- vs plant-based) which may explain variation in effect sizes.
 
 ```{r}
 #| eval: false
@@ -393,17 +403,17 @@ orchard_plot(mod_lnRR_mr,
 
 The intercept represents the estimated mean lnRR for studies using animal-based fertilisers. The coefficient for plant-based fertilisers quantifies the difference in lnRR between plant- and animal-based fertilisers. 
 
-The intercept represents the estimated mean lnRR for studies using animal-based fertilisers, and the coefficient for plant-based fertilisers quantifies the difference in lnRR between plant- and animal-based fertilisers. 
-The estimated coefficient for plant-based fertilisers was negative and statistically significant, indicating that yields under plant-based organic fertilisers were, on average, lower than those under animal-based organic fertilisers. The moderator explained approximately 3.2% of the total variance in effect sizes ($R^2_{\text{marginal}}$ = 0.032) - it indicates that differences between fertiliser types account for a small portion of the overall heterogeneity in effect sizes.
+In the model summary, the estimated coefficient for plant-based fertilisers was negative and statistically significant, indicating that yields under plant-based organic fertilisers were, on average, lower than those under animal-based organic fertilisers. The moderator explained approximately 3.2% of the total variance in effect sizes ($R^2_{\text{marginal}} = 0.032$), indicating that differences between fertiliser types account for only a small proportion of the overall heterogeneity.
+
+This pattern is illustrated in the orchard plot, which shows individual effect size estimates (lnRR) for plant- and animal-based fertilisers, with point sizes scaled by precision (1/SE). The black squares represent the model-predicted mean effects for each fertiliser type, with horizontal lines indicating their associated uncertainty intervals. Although the mean lnRR differs between fertiliser types, the substantial overlap and wide spread of individual effect sizes highlight that most of the variability remains unexplained by fertiliser type alone.
 
 ::: callout-note
 ### $I^2$ vs $R^2$
 $I^2$ and $R^2$ are both measures used in meta-analysis, but they quantify different aspects of variability in effect sizes.
 
-$I^2$ measures the proportion of total variability in effect sizes that is due to heterogeneity among studies rather than sampling error. It provides insight into how much of the observed variation can be attributed to real differences between studies.
+$I^2$ quantifies the proportion of the total observed variance in effect size estimates that is attributable to modelled heterogeneity rather than sampling variance. Its interpretation depends on the specified model structure and on which sources of heterogeneity are included, particularly in multilevel or location–scale meta-analytic models.
 
-$R^2$, on the other hand, quantifies the proportion of variance in effect sizes that is explained by the moderators included in a meta-regression model. It indicates how well the included predictors account for the variability in effect sizes. $R^2_{\text{marginal}}$ measures the power of your chosen moderators to explain heterogeneity, while $R^2_{\text{conditional}}$ measures the total variance accounted for by the model.
-
+By contrast, $R^2$ quantifies the proportion of variance in effect sizes that is explained by moderators in a meta-regression framework, conditional on the fitted model. $R^2_{\text{marginal}}$ reflects the extent to which the included moderators explain heterogeneity, whereas $R^2_{\text{conditional}}$ represents the proportion of variance explained by the full model, including both fixed effects and random effects, under the specified variance structure.
 :::
 
 :::
@@ -499,9 +509,16 @@ The estimated overall mean and between-study standard deviation is comparable to
 
 One important point concerns how random effects are reported. In `brms`, random effect estimates are presented as *standard deviations (SD)*, whereas `metafor` reports *variances* . Therefore, to compare estimates between the two packages, you need to square the standard deviation from `brms` to obtain the variance.
 
+
+The estimated overall mean and between-study standard deviation are comparable to the study-level variance component obtained from the `metafor` model. In contrast, the residual parameter `sigma` represents unexplained heterogeneity at the effect-size level beyond sampling error, corresponding to the effect-size-level variance component in `rma.mv()`.
+
+One important point concerns how random effects are reported. In `brms`, random-effect estimates are presented as standard deviations (SD), whereas `metafor` reports variances. Therefore, to compare estimates between the two packages, the standard deviations reported by `brms` must be squared to obtain the corresponding variance estimates.
+
+Finally, small numerical differences between estimates obtained from `brms` and `metafor` are expected, even when the underlying model structures are closely aligned. This is because `brms` fits models using Bayesian inference, which relies on probabilistic sampling to approximate posterior distributions, whereas `metafor` uses frequentist estimation. As a result, point estimates may differ slightly due to Monte Carlo error and differences in estimation frameworks, rather than reflecting substantive discrepancies between the models.
+
 ### meta-regression
 
-Let's now fit a meta-regression model including fertiliser type as a moderator - you can find the outputs are very similar to those from `metafor`.
+Let's now fit a meta-regression model including fertiliser type as a moderator - the outputs are very similar to those from `metafor`.
 
 ```{r}
 #| eval: false
@@ -794,11 +811,11 @@ orchard_ma_lnCVR
 
 ```
 
-The intercept from the multilevel meta-analysis represents the overall mean lnCVR across all comparisons. A positive estimate indicates that the treatment group has a larger CVthan the control group, meaning greater relative variability (lower stability) after accounting for potential mean differences. 
+The intercept from the multilevel meta-analysis represents the overall mean lnCVR across all comparisons. A positive estimate indicates that the treatment group has a larger CV than the control group, meaning greater relative variability (lower stability) after accounting for potential differences in the mean values. 
 
 Here, the estimated lnCVR is $\beta_0$ = 0.34 (95\% CI= [0.20, 0.48]), suggesting that organic farming is associated with approximately 41% higher relative variability in crop yields compared to conventional farming (= exp(0.34)−1).
 
-$I^2$ values indicate that a substantial portion of the total heterogeneity ($I^2_{\text{Total}}$ = 56.53%) arises from differences between effect sizes within studies ($I^2_{\text{within}}$ = 47.01%), while a smaller share is due to variability between studies ($I^2_{\text{between}}$ = 9.52%).
+$I^2$ values indicate that a substantial portion of the total heterogeneity ($I^2_{\text{Total}}$ = 56.53%) arises from variability among effect sizes within studies ($I^2_{\text{within}}$ = 47.01%), while a smaller share is due to variability between studies ($I^2_{\text{between}}$ = 9.52%).
 
 #### lnVR
 
@@ -851,7 +868,7 @@ orchard_ma_lnVR
 
 ```
 
-The overall lnVR estimate is close to zero and the 95% CI overlaps zero ($\beta_0$ = 0.02, 95\% CI = [-0.11, 0.15]), indicating little evidence for a systematic difference in SD between the two groups. On the original scale, this corresponds to an SD ratio close to one, suggesting that the magnitude of within-group variation is broadly similar across conditions.
+The overall lnVR estimate is close to zero and the 95% CI overlaps zero ($\beta_0$ = 0.02, 95\% CI = [-0.11, 0.15]), indicating little evidence for a systematic difference in SD between the two groups. On the original scale, this corresponds to an SD ratio close to one, suggesting that the magnitude of within-group variation is broadly similar between the two comparison groups..
 
 Despite the absence of a clear average lnVR effect, heterogeneity is substantial. The test for heterogeneity is highly significant, and approximately half of the observed variability in lnVR cannot be attributed to sampling error alone ($I^2 \approx$ 50.6%). Only a smaller proportion of this heterogeneity is attributable to between-study differences ($I^2 \approx$ 12.8%), whereas a larger share arises at the effect-size level within studies ($I^2 \approx$ 37.8%). This pattern indicates considerable context dependence or within-study variation in absolute variability effects, even though the average effect across all comparisons is close to zero.
 
@@ -1268,7 +1285,8 @@ summary(fit_mr3)
 :::
 
 ## glmmTMB
-We can also fit the same meta-analytic and meta-regression models using `glmmTMB`. You can find that the outputs are very similar to those from `metafor` and `brms`.
+We can also fit the same meta-analytic and meta-regression models using `glmmTMB`.
+The outputs are very similar to those from `metafor` and `brms`.
 
 First, we need to prepare the variance-covariance matrix for the sampling errors as shown below…
 
@@ -1490,9 +1508,9 @@ At present, `metafor` does not support fully multilevel location–scale meta-an
 
 Below, we demonstrate two types of models:
 
-1.  Simple location–scale meta-regression
+A.  Simple location–scale meta-regression
 
-2.  Multilevel heteroscedastic meta-regression
+B.  Multilevel heteroscedastic meta-regression
 
 ::: callout-note
 It is best to treat the `metafor` models presented above as approximations to full multilevel location-scale meta-analytic models. 
@@ -1502,7 +1520,7 @@ These approach arrow the specification of rich multilevel structures, and in par
 :::
 
 ::: panel-tabset
-### 1. Simple (no random effects on location and scale components)
+### A. Simple (no random effects on location and scale components)
 
 The formulation using `rma()` provides a straightforward way to test whether variability in effect sizes depends on the moderator, but it treats all effect sizes as independent and does not include a multilevel structure. `scale` argument allows us to specify a model for the residual variance, enabling us to test whether the variability of effect sizes differs across levels of the moderator.
 
@@ -1635,7 +1653,7 @@ summary(mod_lnVR_ls)
 The models suggest that plant-based fertilisers are associated with both lower mean effects and substantially greater variability across studies. In particular, the scale component indicates that effect sizes are markedly more dispersed for plant-based fertilisers across all three variability metrics. However, these models treat all effect sizes as independent and do not account for the multilevel structure of the data.
 <!-- Should we add the estimated values? -->
 
-### 2. Heteroscedastic meta-regression
+### B. Heteroscedastic meta-regression
 Heteroscedastic meta-regression models allow residual variance to differ across levels of a moderator while incorporating a multilevel random-effects structure. 
 By relaxing the assumption of constant heterogeneity, these models permit different levels of a moderator to be associated with different amounts of residual variability. 
 Although this approach does not constitute a full multilevel location–scale model, it provides a useful intermediate step toward more flexible variance modelling. 
@@ -1837,13 +1855,16 @@ In this tutorial, we focus primarily on a location–scale meta-regression model
 
 For completeness, we also briefly introduce two more complex extensions:
 
-1.  Location–scale meta-regression with fixed effects in the scale component This is the primary model used in this tutorial and the only one for which we provide full interpretation of results.
+A.  Location–scale meta-regression with fixed effects in the scale component. \
+This is the primary model used in this tutorial and the only one for which we provide full interpretation of results.
 
-2.  Location–scale meta-regression with random effects in the scale component This model allows heterogeneity to vary across higher-level grouping factors (for example, studies), but may be difficult to fit reliably in practice.
+B.  Location–scale meta-regression with random effects in the scale component. \
+This model allows heterogeneity to vary across higher-level grouping factors (for example, studies), but may be difficult to fit reliably in practice.
 
-3.  Location–scale meta-regression with correlated random effects in the location and scale components This formulation allows the mean and heterogeneity to be evolutionarily or structurally linked, but often suffers from convergence issues in applied meta-analytic datasets.
+C.  Location–scale meta-regression with correlated random effects in the location and scale components. \
+This formulation allows the mean and heterogeneity to be evolutionarily or structurally linked, but often suffers from convergence issues in applied meta-analytic datasets.
 
-Models 2 and 3 are included to illustrate the range of model structures that are theoretically possible in `brms`. We provide one concrete example of each, but we do not interpret their results in detail, as these models frequently exhibit convergence problems and require a lot of data. If you are interested in more detail, please check Nakagawa et al. (2025[a](https://doi.org/10.1111/gcb.70204), [b](https://doi.org/10.1111/2041-210x.70203)).
+Models B and C are included to illustrate the range of model structures that are theoretically possible in `brms`. We provide one concrete example of each, but we do not interpret their results in detail, as these models frequently exhibit convergence problems and require a lot of data. If you are interested in more detail, please check Nakagawa et al. (2025[a](https://doi.org/10.1111/gcb.70204), [b](https://doi.org/10.1111/2041-210x.70203)).
 
 It is worth noting that, in the models presented here, we specify the scale component using the `sigma ~` syntax in `brms`. This choice reflects the use of a Gaussian response distribution, for which `sigma` represents the residual standard deviation. For other response distributions, the scale component may be parametrised differently in `brms` (for example, using `shape` or `phi` - see [here](https://ayumi-495.github.io/Eco_location-scale_model/#specifying-the-scale-component)), and the corresponding model formula should be adapted accordingly.
 
@@ -1860,11 +1881,11 @@ Models with random effects in the scale component, and especially models with co
 
 -   Thorough convergence diagnostics
 
-For these reasons, we treat Models 2 and 3 as examples. We recommend that readers begin with a simpler location–scale model that uses fixed effects in the scale part, and only add complexity if the data clearly support it, and also, you have enough data.
+For these reasons, we treat Models A and B as examples. We recommend that readers begin with a simpler location–scale model that uses fixed effects in the scale part, and only add complexity if the data clearly support it, and also, you have enough data.
 :::
 
 ::: panel-tabset
-### 1. Only fixed effects in scale component
+### A. Only fixed effects in scale component
 
 In this model, we include fixed effects in both location and scale components, but no random effects in the scale component (of course, we can include any random effects on location component).
 
@@ -1881,13 +1902,13 @@ form_ls_ma1 <- bf(lnRR ~ 1 + Org.fertilizer.type +
                   sigma ~ 1 +  Org.fertilizer.type # fixed effects only in scale component
                   )
 
-# generate default priors
+# generate default prior
 prior_ls_ma1 <- default_prior(form_ls_ma1, 
                               data=dat, 
                               data2=list(vcv=vcv),
                               family=gaussian())
 
-prior_ls_ma1$prior[5] = "constant(1)" # meta-analysis assumes
+prior_ls_ma1$prior[5] = "constant(1)" # fixing the variance to 1 
 
 # fitting model
 fit_ls_ma1 <- brm(
@@ -1938,9 +1959,9 @@ p3 <- visualize_fixed_effects(fit_ls_ma1)
 p4 <- visualize_random_effects2(fit_ls_ma1)
 ```
 
-For lnRR, the location component indicated a negative average effect under animal-based fertilisers ($\beta^{(l)}_{{\text{animal}}$ = -0.26, 95\% credible interval CrI = [−0.38, −0.16]), implying that organic yields are, on average, lower than conventional yields under animal-based fertilisation.
+For lnRR, the location component indicated a negative average effect under animal-based fertilisers ($\beta^{(l)}_{\text{animal}}$ = -0.26, 95\% credible interval CrI = [−0.38, −0.16]), implying that organic yields are, on average, lower than conventional yields under animal-based fertilisation.
 The contrast coefficient for fertiliser type was also negative ($\beta^{(l)}_{\text{animal-plant}}$ = -0.15, 95\% CrI [−0.27, −0.03]), indicating an additional yield penalty under plant-based fertilisers relative to animal-based fertilisers. 
-On the response-ratio scale, these estimates correspond approximately to organic yields of \exp(-0.26) $\approx$ 0.77 (about 23\% lower than conventional) under animal-based fertilisers, versus \exp(-0.26 - 0.15) $\approx$ 0.66 (about 34\% lower) under plant-based fertilisers.
+On the response-ratio scale, these estimates correspond to an expected organic yield of $\exp(\beta_0)$ = $\exp$(-0.26) $\approx$ 0.77, or about 23% lower than conventional yields, under animal-based fertilisers (the reference category). For plant-based fertilisers, the predicted response ratio is given by $\exp(\beta_0$ + $\beta_{\text{plant}}$) = $\exp$(-0.26 - 0.15) $\approx 0.66$, corresponding to organic yields that are approximately 34% lower than conventional yields.
 
 The scale component, modelled on the log-$\sigma$ scale, suggested a tendency towards greater residual heterogeneity under plant-based fertilisers ($\beta^{(s)}_{\text{animal-plant}}$ = 0.17, 95\% CrI = [−0.01, 0.35]). 
 This corresponds to an approximate 19\% increase in residual heterogeneity for plant-based systems (\exp(0.17)-1 $\approx$ 0.19), although the credible interval still overlapped zero, indicating moderate uncertainty in the magnitude of this effect.
@@ -2024,7 +2045,7 @@ For lnCVR, the location component indicated that organic systems tend to exhibit
 The contrast coefficient for fertiliser type in the location component was small and highly uncertain
 ($\beta^{(l)}_{\text{animal-plant}}$ = 0.08, 95\% CrI [−0.17, 0.32]), suggesting that fertiliser category does not systematically shift the average stability difference between organic and conventional systems.
 
-In contrast, the scale component revealed clear evidence that fertiliser type strongly governs the predictability of lnCVR effects. Residual heterogeneity was substantially larger under plant-based fertilisers $(\beta^{(s)}_{\text{animal-plant}}$ = 0.51, 95% CrI [0.15, 0.87]), corresponding to a multiplicative increase in residual variability of approximately 68% (\exp(0.51) $\approx$ 1.68). Under this model, the implied residual standard deviation for lnCVR under plant-based fertilisers is $\sigma \approx \exp(-0.83 + 0.51) \approx 0.73$.
+In contrast, the scale component revealed clear evidence that fertiliser type strongly governs the predictability of lnCVR effects. Residual heterogeneity was substantially larger under plant-based fertilisers $(\beta^{(s)}_{\text{animal-plant}}$ = 0.51, 95% CrI [0.15, 0.87]), corresponding to a multiplicative increase in residual variability of approximately 68% (\exp(0.51) $\approx$ 1.68). Under this model, the implied residual standard deviation for lnCVR under plant-based fertilisers is $\sigma \approx \exp$(-0.83 + 0.51) $\approx$ 0.73.
 
 Thus, while the expected magnitude of the stability gap (lnCVR) is broadly similar across fertiliser categories, the evidence is far less transferable under plant-based fertilisers. Some studies show near parity in stability between organic and conventional systems, whereas others show much larger differences, indicating strong context dependence.
 
@@ -2079,7 +2100,7 @@ Thus, while the expected magnitude of the stability gap (lnCVR) is broadly simil
 
 <!-- ``` -->
 
-### 2 and 3. Random effects/Correlated random effects in location and scale components
+### B and C. Random effects/Correlated random effects in location and scale components
 
 The models presented here extend the basic location–scale meta-regression by allowing study-level heterogeneity to operate not only on the mean effect size, but also on the residual variance.
 
@@ -2129,7 +2150,7 @@ But it should be mentioned that `glmmTMB` does not support correlated random eff
 
 Again, the same as `brms`, we focus on a location–scale meta-regression model with fixed effects in the scale component.
 
-### 1. Only fixed effects in scale component
+### A. Only fixed effects in scale component
 In `glmmTMB`, the location–scale structure is implemented by separating the model into a *conditional* component and a *dispersion* component. 
 The conditional model specifies the mean structure of the response (location), while the dispersion model specifies how the residual variance changes as a function of predictors (scale). 
 Note that the dispersion model in `glmmTMB` does not describe an additional random effect, but rather models heteroscedasticity in the residual variance on the log scale.
@@ -2192,7 +2213,7 @@ summary(glmm_lnRR1)
 
 ```{r}
 #| eval: false
-
+library(glmmTMB)
 glmm_lnCVR1 <- glmmTMB(lnCVR ~ 1 + Org.fertilizer.type + (1 | study_ID) + 
                         equalto(0 + effect_size_ID|g, vcv),
                       dispformula = ~ 1 + Org.fertilizer.type,
@@ -2205,38 +2226,38 @@ summary(glmm_lnCVR1)
 # Data: dat
 # 
 #       AIC       BIC    logLik -2*log(L)  df.resid 
-#     889.4     908.3    -439.7     879.4       313 
+#     930.3     949.1    -460.2     920.3       313 
 # 
 # Random effects:
 # 
 # Conditional model:
-#  Groups   Name             Variance Std.Dev. Corr                                            
-#  study_ID (Intercept)      0.05782  0.2405                                                   
-#  g        effect_size_ID33 0.11583  0.3403                                                   
-#           effect_size_ID34 0.29264  0.5410   0.00                                            
-#           effect_size_ID35 0.31983  0.5655   0.00 0.00                                       
-#           effect_size_ID36 0.32986  0.5743   0.00 0.00 0.00                                  
-#           effect_size_ID37 0.33374  0.5777   0.00 0.00 0.00 0.00                             
-#           effect_size_ID39 0.12070  0.3474   0.00 0.00 0.00 0.00 0.00                        
-#           effect_size_ID40 0.12026  0.3468   0.00 0.00 0.00 0.00 0.00 0.00                   
-#           effect_size_ID42 0.28633  0.5351   0.00 0.00 0.00 0.00 0.00 0.00 0.00              
-#           effect_size_ID44 0.28315  0.5321   0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00         
-#           effect_size_ID45 0.25123  0.5012   0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00    
-#           ...              ...      ...      ...  ...  ...  ...  ...  ...  ...  ...  ...  ...
-#  Residual                       NA      NA                                                   
+#  Groups   Name             Variance  Std.Dev. Corr                                            
+#  study_ID (Intercept)      0.1083168 0.32912                                                  
+#  g        effect_size_ID33 0.0047213 0.06871                                                  
+#           effect_size_ID34 0.0426425 0.20650  0.00                                            
+#           effect_size_ID35 0.0698313 0.26426  0.00 0.00                                       
+#           effect_size_ID36 0.0798567 0.28259  0.00 0.00 0.00                                  
+#           effect_size_ID37 0.0837435 0.28938  0.00 0.00 0.00 0.00                             
+#           effect_size_ID39 0.0095870 0.09791  0.00 0.00 0.00 0.00 0.00                        
+#           effect_size_ID40 0.0091520 0.09567  0.00 0.00 0.00 0.00 0.00 0.00                   
+#           effect_size_ID42 0.0363323 0.19061  0.00 0.00 0.00 0.00 0.00 0.00 0.00              
+#           effect_size_ID44 0.0331452 0.18206  0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00         
+#           effect_size_ID45 0.0012338 0.03513  0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00    
+#           ...              ...       ...      ...  ...  ...  ...  ...  ...  ...  ...  ...  ...
+#  Residual                         NA      NA                                                  
 # Number of obs: 318, groups:  study_ID, 36; g, 1
 # 
 # Conditional model:
 #                          Estimate Std. Error z value Pr(>|z|)    
-# (Intercept)               0.30208    0.08297   3.641 0.000272 ***
-# Org.fertilizer.typeplant  0.08451    0.12103   0.698 0.484986    
+# (Intercept)               0.32787    0.09283   3.532 0.000413 ***
+# Org.fertilizer.typeplant  0.07193    0.15208   0.473 0.636203    
 # ---
 # Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
 # 
 # Dispersion model:
 #                          Estimate Std. Error z value Pr(>|z|)    
-# (Intercept)               -0.8265     0.1300  -6.356 2.07e-10 ***
-# Org.fertilizer.typeplant   0.5201     0.1767   2.943  0.00325 ** 
+# (Intercept)              -0.41563    0.07030  -5.913 3.37e-09 ***
+# Org.fertilizer.typeplant  0.66519    0.08807   7.553 4.26e-14 ***
 
 ```
 
@@ -2258,40 +2279,40 @@ summary(glmm_lnVR1)
 # Data: dat
 # 
 #       AIC       BIC    logLik -2*log(L)  df.resid 
-#     836.5     855.3    -413.3     826.5       313 
+#     901.0     919.8    -445.5     891.0       313 
 # 
 # Random effects:
 # 
 # Conditional model:
-#  Groups   Name             Variance Std.Dev. Corr                                            
-#  study_ID (Intercept)      0.05500  0.2345                                                   
-#  g        effect_size_ID33 0.11583  0.3403                                                   
-#           effect_size_ID34 0.29264  0.5410   0.00                                            
-#           effect_size_ID35 0.31983  0.5655   0.00 0.00                                       
-#           effect_size_ID36 0.32986  0.5743   0.00 0.00 0.00                                  
-#           effect_size_ID37 0.33374  0.5777   0.00 0.00 0.00 0.00                             
-#           effect_size_ID39 0.12070  0.3474   0.00 0.00 0.00 0.00 0.00                        
-#           effect_size_ID40 0.12026  0.3468   0.00 0.00 0.00 0.00 0.00 0.00                   
-#           effect_size_ID42 0.28633  0.5351   0.00 0.00 0.00 0.00 0.00 0.00 0.00              
-#           effect_size_ID44 0.28315  0.5321   0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00         
-#           effect_size_ID45 0.25123  0.5012   0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00    
-#           ...              ...      ...      ...  ...  ...  ...  ...  ...  ...  ...  ...  ...
-#  Residual                       NA      NA                                                   
+#  Groups   Name             Variance  Std.Dev. Corr                                            
+#  study_ID (Intercept)      0.0872038 0.29530                                                  
+#  g        effect_size_ID33 0.0047213 0.06871                                                  
+#           effect_size_ID34 0.0426425 0.20650  0.00                                            
+#           effect_size_ID35 0.0698313 0.26426  0.00 0.00                                       
+#           effect_size_ID36 0.0798567 0.28259  0.00 0.00 0.00                                  
+#           effect_size_ID37 0.0837435 0.28938  0.00 0.00 0.00 0.00                             
+#           effect_size_ID39 0.0095870 0.09791  0.00 0.00 0.00 0.00 0.00                        
+#           effect_size_ID40 0.0091520 0.09567  0.00 0.00 0.00 0.00 0.00 0.00                   
+#           effect_size_ID42 0.0363323 0.19061  0.00 0.00 0.00 0.00 0.00 0.00 0.00              
+#           effect_size_ID44 0.0331452 0.18206  0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00         
+#           effect_size_ID45 0.0012338 0.03513  0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00    
+#           ...              ...       ...      ...  ...  ...  ...  ...  ...  ...  ...  ...  ...
+#  Residual                         NA      NA                                                  
 # Number of obs: 318, groups:  study_ID, 36; g, 1
 # 
 # Conditional model:
 #                          Estimate Std. Error z value Pr(>|z|)
-# (Intercept)               0.06085    0.07014   0.868    0.386
-# Org.fertilizer.typeplant -0.14843    0.10916  -1.360    0.174
+# (Intercept)               0.09693    0.08462   1.146    0.252
+# Org.fertilizer.typeplant -0.19232    0.14428  -1.333    0.183
 # 
 # Dispersion model:
-#                          Estimate Std. Error z value Pr(>|z|)
-# (Intercept)                -2.506      1.758  -1.425    0.154
-# Org.fertilizer.typeplant    2.150      1.762   1.220    0.222
+#                          Estimate Std. Error z value Pr(>|z|)    
+# (Intercept)              -0.51541    0.07028  -7.334 2.24e-13 ***
+# Org.fertilizer.typeplant  0.75408    0.08808   8.561  < 2e-16 ***
 
 ```
 
-### 2. Random effects in location and scale components
+### B. Random effects in location and scale components
 
 If you want to include random effects in the scale component, you just need to insert them to the `dispformula` part of the model.
 
@@ -2303,6 +2324,53 @@ glmm_lnRR2 <- glmmTMB(lnRR ~ 1 + Org.fertilizer.type + (1 | study_ID) +
                       dispformula = ~ 1 + Org.fertilizer.type + (1 | study_ID),
                       data = dat,
                       REML = TRUE)
+summary(glmm_lnRR2)
+#  Family: gaussian  ( identity )
+# Formula:          lnRR ~ 1 + Org.fertilizer.type + (1 | study_ID) + equalto(0 +  
+#     effect_size_ID | g, vcv)
+# Dispersion:            ~1 + Org.fertilizer.type + (1 | study_ID)
+# Data: dat
+# 
+#       AIC       BIC    logLik -2*log(L)  df.resid 
+#     177.4     199.9     -82.7     165.4       312 
+# 
+# Random effects:
+# 
+# Conditional model:
+#  Groups   Name             Variance  Std.Dev. Corr                                            
+#  study_ID (Intercept)      0.0570683 0.23889                                                  
+#  g        effect_size_ID33 0.0047213 0.06871                                                  
+#           effect_size_ID34 0.0426425 0.20650  0.00                                            
+#           effect_size_ID35 0.0698313 0.26426  0.00 0.00                                       
+#           effect_size_ID36 0.0798567 0.28259  0.00 0.00 0.00                                  
+#           effect_size_ID37 0.0837435 0.28938  0.00 0.00 0.00 0.00                             
+#           effect_size_ID39 0.0095870 0.09791  0.00 0.00 0.00 0.00 0.00                        
+#           effect_size_ID40 0.0091520 0.09567  0.00 0.00 0.00 0.00 0.00 0.00                   
+#           effect_size_ID42 0.0363323 0.19061  0.00 0.00 0.00 0.00 0.00 0.00 0.00              
+#           effect_size_ID44 0.0331452 0.18206  0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00         
+#           effect_size_ID45 0.0012338 0.03513  0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00 0.00    
+#           ...              ...       ...      ...  ...  ...  ...  ...  ...  ...  ...  ...  ...
+#  Residual                         NA      NA                                                  
+# Number of obs: 318, groups:  study_ID, 36; g, 1
+# 
+# Dispersion model:
+#  Groups   Name        Variance Std.Dev.
+#  study_ID (Intercept) 0.06081  0.2466  
+#  Residual                  NA      NA  
+# Number of obs: 318, groups:  study_ID, 36
+# 
+# Conditional model:
+#                          Estimate Std. Error z value Pr(>|z|)    
+# (Intercept)              -0.26476    0.04887  -5.417 6.05e-08 ***
+# Org.fertilizer.typeplant -0.11847    0.04545  -2.607  0.00914 ** 
+# ---
+# Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+# 
+# Dispersion model:
+#                          Estimate Std. Error z value Pr(>|z|)    
+# (Intercept)               -1.6225     0.1147  -14.14  < 2e-16 ***
+# Org.fertilizer.typeplant   0.4022     0.1406    2.86  0.00424 ** 
+
 ```
 
 # Software and package versions
