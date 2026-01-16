@@ -88,7 +88,6 @@ glmmTMB:::.valid_covstruct ## check the available covstruc (you should see equal
 Also, we have created a custom function for visualising the outputs of meta-analysis models fitted in `brms` If you are interested, please expand the folded code below to view it.
 
 ```{r}
-#| echo: false
 #| code-fold: true
 
 library(patchwork)
