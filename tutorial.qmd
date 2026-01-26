@@ -621,7 +621,9 @@ The `equalto()` term in `glmmTMB` requires a grouping factor, even when all obse
 
 Conceptually, this step allows us to include sampling error as a random effect with a fixed, known variance structure.
 
-You can also refer to this supplementary material for more details: <https://coraliewilliams.github.io/equalto_sim_study/webpage.html>.
+You can also refer to this supplementary material for more details:
+<https://cran.r-project.org/web/packages/glmmTMB/vignettes/covstruct.html>
+<https://coraliewilliams.github.io/equalto_sim_study/webpage.html>.
 
 ::: panel-tabset
 ### meta-analysis (overall effect)
