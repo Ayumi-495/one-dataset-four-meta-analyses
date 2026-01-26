@@ -73,28 +73,18 @@ Outputs for the scale component in scale parts are reported on the log scale. Gu
 ## Setup
 
 ### Load packages
-
+First, we need to load necessary packages.
 ```{r}
 # needed packages
-pacman::p_load("brms", "metafor", "tidyverse", 
+pacman::p_load("brms", "glmmTMB", "metafor", "tidyverse", 
                "tidybayes", "orchaRd", "here")
 ```
 
-To do meta-analysis with `glmmTMB`, we need to install a development version of the package from GitHub:
-<!--probably remove this -->
-```{r}
-#| eval: false
-# build package from branch: 
-# probably remove section when we publish this tutorial
-remove.packages("glmmTMB")  ## if you have already installed glmmTMB
-
-remotes::install_github("coraliewilliams/glmmTMB", ref = "equalto_covstruc", 
-                        subdir = "glmmTMB", force = TRUE) 
-# library(glmmTMB)
-glmmTMB:::.valid_covstruct ## check the available covstruc (you should see equalto)
-```
+::: callout-important
+Until recently. `equalto()`, which is required to conduct meta-analyses in `glmmTMB`, was not implemented. If you want to run meta-analytic models (including meta-regression), please ensure that you have installed the latest version of the package.
 
 Also, we have created a custom function for visualising the outputs of meta-analysis models fitted in `brms` If you are interested, please expand the folded code below to view it.
+:::
 
 ```{r}
 #| code-fold: true
