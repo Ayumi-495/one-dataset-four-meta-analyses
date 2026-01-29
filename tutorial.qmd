@@ -34,46 +34,77 @@ execute:
   warning: false
   message: false
   tidy: true
+editor: 
+  markdown: 
+    wrap: sentence
 ---
 
 <!-- Citation info!! -->
 
 # Intended audience and scope of this tutorial
-This tutorial is intended for researchers who already have a basic understanding of meta-analysis and some familiarity with statistical modelling in `R`. 
+
+This tutorial is intended for researchers who already have a basic understanding of meta-analysis and some familiarity with statistical modelling in `R`.
 It is aimed at readers who wish to develop practical skills in location–scale meta-analytic modelling, using standard meta-analytic models as a foundation for understanding how mean effects and variability can be jointly analysed.
 
-The scope of this tutorial is deliberately focused on conceptual comparison and practical illustration rather than exhaustive coverage. We do not provide an introduction to meta-analytic theory, effect size calculation, or general R programming, as these topics are well covered elsewhere. Instead, the tutorial uses a single dataset to demonstrate four complementary meta-analytic perspectives, highlighting their assumptions, strengths, and limitations.
+The scope of this tutorial is deliberately focused on conceptual comparison and practical illustration rather than exhaustive coverage.
+We do not provide an introduction to meta-analytic theory, effect size calculation, or general R programming, as these topics are well covered elsewhere.
+Instead, the tutorial uses a single dataset to demonstrate four complementary meta-analytic perspectives, highlighting their assumptions, strengths, and limitations.
+
+For clarity, the four meta-analytic models illustrated in this tutorial are:
+
+-   Model 1 (mean-effect meta-analysis): synthesis of mean effects using the log response ratio (lnRR)
+
+-   Model 2 (meta-analysis of variability): synthesis of within-population variability using lnVR and lnCVR
+
+-   Model 3 (location-scale meta-regression of mean effects): location-scale meta-regression applied to lnRR to examine how moderator(s) influence both the mean and its heterogeneity
+
+-   Model 4 (location-scale meta-regression of variability): location-scale meta-regression applied to lnVR/lnCVR to examine how moderator(s) influence both within-population variability and the heterogeneity of variability
+
 
 # Introduction
 
-This online tutorial walks you through each step of meta-analysis and location-scale meta-regression using three `R` packages: `metafor`, `brms`, and `glmmTMB`. With one real dataset, we show how to analyse mean effects, within-population variability, and context-dependent heterogeneity, from data preparation through model interpretation.
-
+This online tutorial walks you through each step of meta-analysis and location-scale meta-regression using three `R` packages: `metafor`, `brms`, and `glmmTMB`.
+With one real dataset, we show how to analyse mean effects, within-population variability, and context-dependent heterogeneity, from data preparation through model interpretation.
 
 Detailed methodological explanations and additional examples are beyond the scope of this tutorial - readers interested in further details may find the following website and relevant papers helpful:
 
 1.  **Meta-analysis**\
     Online tutorial: <https://itchyshin.github.io/Meta-analysis_tutorial/>\
     Related paper:\
-    Nakagawa S, Yang Y, Macartney EL, Spake R, Lagisz M. (2023). Quantitative evidence synthesis: a practical guide on meta-analysis, meta-regression, and publication bias tests for environmental sciences. *Environmental Evidence.* 12:8. <https://doi.org/10.1186/s13750-023-00301-6>
+    Nakagawa S, Yang Y, Macartney EL, Spake R, Lagisz M.
+    (2023).
+    Quantitative evidence synthesis: a practical guide on meta-analysis, meta-regression, and publication bias tests for environmental sciences.
+    *Environmental Evidence.* 12:8.
+    <https://doi.org/10.1186/s13750-023-00301-6>
 
 2.  **Location–scale meta-analysis models**\
     Online tutorial: <https://itchyshin.github.io/location-scale_meta-analysis/>\
     Related paper:\
-    Nakagawa S, Mizuno A, Morrison K, Ricolfi L, Williams C, Drobniak SM, Lagisz M, Yang Y. (2025). Location‐Scale Meta‐Analysis and Meta‐Regression as a Tool to Capture Large‐Scale Changes in Biological and Methodological Heterogeneity: A Spotlight on Heteroscedasticity. *Global Change Biology.* 31:e70204. <https://doi.org/10.1111/gcb.70204>
+    Nakagawa S, Mizuno A, Morrison K, Ricolfi L, Williams C, Drobniak SM, Lagisz M, Yang Y.
+    (2025).
+    Location‐Scale Meta‐Analysis and Meta‐Regression as a Tool to Capture Large‐Scale Changes in Biological and Methodological Heterogeneity: A Spotlight on Heteroscedasticity.
+    *Global Change Biology.* 31:e70204.
+    <https://doi.org/10.1111/gcb.70204>
 
 3.  **Location–scale models**\
     Online tutorial: <https://ayumi-495.github.io/Eco_location-scale_model/>\
     Related paper:\
-    Nakagawa S, Ortega S, Gazzea E, Lagisz M, Lenz A, Lundgren E, Mizuno A. (2025). Location–scale models in ecology and evolution: Heteroscedasticity in continuous, count and proportion data. *Methods in Ecology and Evolution.* <https://doi.org/10.1111/2041-210x.70203>
+    Nakagawa S, Ortega S, Gazzea E, Lagisz M, Lenz A, Lundgren E, Mizuno A.
+    (2025).
+    Location–scale models in ecology and evolution: Heteroscedasticity in continuous, count and proportion data.
+    *Methods in Ecology and Evolution.* <https://doi.org/10.1111/2041-210x.70203>
 
 ::: callout-note
-Outputs for the scale component in scale parts are reported on the log scale. Guidance on how to interpret these parameters, including back-transformation and interpretation is provided in the third online tutorial.
+Outputs for the scale component in scale parts are reported on the log scale.
+Guidance on how to interpret these parameters, including back-transformation and interpretation is provided in the third online tutorial.
 :::
 
 ## Setup
 
 ### Load packages
+
 First, we need to load necessary packages.
+
 ```{r}
 # needed packages
 pacman::p_load("brms", "glmmTMB", "metafor", "tidyverse", 
@@ -81,7 +112,8 @@ pacman::p_load("brms", "glmmTMB", "metafor", "tidyverse",
 ```
 
 ::: callout-important
-Until recently. `equalto()`, which is required to conduct meta-analyses in `glmmTMB`, was not implemented. If you want to run meta-analytic models (including meta-regression), please ensure that you have installed the latest version of the package.
+Until recently `equalto()`, which is required to conduct meta-analyses in `glmmTMB`, was not implemented.
+If you want to run meta-analytic models (including meta-regression), please ensure that you have installed the latest version of the package.
 
 Also, we have created a custom function for visualising the outputs of meta-analysis models fitted in `brms` If you are interested, please expand the folded code below to view it.
 :::
@@ -206,11 +238,13 @@ visualize_random_effects2 <- function(model) {
 
 ```
 
-All the outputs from the code chunks are saved in the Google drive folder (URL) to speed up the rendering process of this tutorial. If you want to run all the code chunks by yourself, please set `eval: true` for those code chunks with `eval: false`.
+All the outputs from the code chunks are saved in the [Google drive folder](https://drive.google.com/drive/folders/1gLn52s5hL_4JI0Z0-t-nmIjeur-_0v4n?usp=sharing) to speed up the rendering process of this tutorial. You can download all files and see these outputs in your R environment
+If you want to run all the code chunks by yourself, please set `eval: true` for those code chunks with `eval: false`.
 
 ### Data preparation
 
-We use a dataset from Ponisio et al. (2015), which synthesises experimental studies comparing organic and conventional crop yields across a wide range of crop types, management practices, and geographic regions. The full meta-dataset comprises over 1,000 organic–conventional yield comparisons drawn from more than 100 primary studies; detailed metadata, inclusion criteria, and data descriptions are provided in the original publication and its associated supplementary materials.  
+We use a dataset from Ponisio et al. (2015), which synthesises experimental studies comparing organic and conventional crop yields across a wide range of crop types, management practices, and geographic regions.
+The full meta-dataset comprises over 1,000 organic–conventional yield comparisons drawn from more than 100 primary studies; detailed metadata, inclusion criteria, and data descriptions are provided in the original publication and its associated supplementary materials.\
 A subset of the data is used here to facilitate computation and clarity of presentation while preserving the essential structure of the dataset
 
 ```{r}
@@ -236,7 +270,9 @@ dat <- datfull %>%
 
 ### Effect size calculation
 
-Original study calculated and used log response ratio (lnRR) and its variance. We will also calculate log variance ratio (lnVR) and log coefficient of variation ratio (lnCVR), and their variances, respectively. `metafor` has a function `escalc` to calculate various effect sizes including lnVR and lnCVR.
+Original study calculated and used log response ratio (lnRR) and its variance.
+We will also calculate log variance ratio (lnVR) and log coefficient of variation ratio (lnCVR), and their variances, respectively.
+`metafor` has a function `escalc` to calculate various effect sizes including lnVR and lnCVR.
 
 ```{r}
 
@@ -266,20 +302,24 @@ dat <- escalc(measure = "CVR",
 
 # Model 1: Meta-analysis of mean
 
-We will first fit multilevel meta-analysis and meta-regression models to estimate the overall mean effect size using lnRR effect size. We will model effect sizes as the response variable, with random intercepts specified for study identity and effect-size identity to account for the hierarchical structure of the data and non-independence among observations.
+We will first fit multilevel meta-analysis and meta-regression models to estimate the overall mean effect size using lnRR effect size.
+We will model effect sizes as the response variable, with random intercepts specified for study identity and effect-size identity to account for the hierarchical structure of the data and non-independence among observations.
 
 ## metafor
 
-::: panel-tabset
+:::: panel-tabset
 ### meta-analysis (overall effect)
 
-When we want to run the multilevel meta-analysis using `metafor`, we can use the `rma.mv` function. Here, we specify `lnRR` as the response variable and `var.lnRR` as the sampling variance. Random effects are specified using the `random` argument, where we include random intercepts for both `study_ID` and `effect_size_ID`.
+When we want to run the multilevel meta-analysis using `metafor`, we can use the `rma.mv` function.
+Here, we specify `lnRR` as the response variable and `var.lnRR` as the sampling variance.
+Random effects are specified using the `random` argument, where we include random intercepts for both `study_ID` and `effect_size_ID`.
 
 ```{r}
 #| eval: false
 
 mod_lnRR <- rma.mv(lnRR,
                     var.lnRR,
+                    mod = ~ 1,
                     random = list(~ 1 | study_ID,
                                   ~ 1 | effect_size_ID),
                     data = dat,
@@ -324,11 +364,13 @@ orchard_ma_lnRR
 
 ```
 
-The estimated average effect size was negative: $\beta_0$ = -0.32, 95\% confidence interval, CI = [-0.43, -0.22]), indicating that organic farming reduced crop yield by approximately 27% compared to conventional farming (1- exp(-0.32) = 1- 0.73). There was also high heterogeneity among effect sizes ($I^2_{\text{Total}}$ = 98.11%), with contributions from both the study level and the effect size level ($I^2_{\text{between}}$ = 46.09%, $I^2_{\text{within}}$ = 52.02%). This indicates that effect sizes vary widely across studies as well as within studies.
+The estimated average effect size was negative: $\beta_0$ = -0.32, 95% confidence interval, CI = \[-0.43, -0.22\]), indicating that organic farming reduced crop yield by approximately 27% compared to conventional farming (1- exp(-0.32) = 1- 0.73).
+There was also high heterogeneity among effect sizes ($I^2_{\text{Total}}$ = 98.11%), with contributions from both the study level and the effect size level ($I^2_{\text{between}}$ = 46.09%, $I^2_{\text{within}}$ = 52.02%).
+This indicates that effect sizes vary widely across studies as well as within studies.
 
 ### meta-regression
 
-Next, we fit a simple meta-regression to examine the type of fertiliser  (animal- vs plant-based) which may explain variation in effect sizes.
+Next, we fit a simple meta-regression to examine the type of fertiliser (animal- vs plant-based) which may explain variation in effect sizes.
 
 ```{r}
 #| eval: false
@@ -391,35 +433,46 @@ orchard_plot(mod_lnRR_mr,
 
 ```
 
-The intercept represents the estimated mean lnRR for studies using animal-based fertilisers. The coefficient for plant-based fertilisers quantifies the difference in lnRR between plant- and animal-based fertilisers. 
+The intercept represents the estimated mean lnRR for studies using animal-based fertilisers.
+The coefficient for plant-based fertilisers quantifies the difference in lnRR between plant- and animal-based fertilisers.
 
-In the model summary, the estimated coefficient for plant-based fertilisers was negative and statistically significant, indicating that yields under plant-based organic fertilisers were, on average, lower than those under animal-based organic fertilisers. The moderator explained approximately 3.2% of the total variance in effect sizes ($R^2_{\text{marginal}} = 0.032$), indicating that differences between fertiliser types account for only a small proportion of the overall heterogeneity.
+In the model summary, the estimated coefficient for plant-based fertilisers was negative and statistically significant, indicating that yields under plant-based organic fertilisers were, on average, lower than those under animal-based organic fertilisers.
+The moderator explained approximately 3.2% of the total variance in effect sizes ($R^2_{\text{marginal}} = 0.032$), indicating that differences between fertiliser types account for only a small proportion of the overall heterogeneity.
 
-This pattern is illustrated in the orchard plot, which shows individual effect size estimates (lnRR) for plant- and animal-based fertilisers, with point sizes scaled by precision (1/SE). The black squares represent the model-predicted mean effects for each fertiliser type, with horizontal lines indicating their associated uncertainty intervals. Although the mean lnRR differs between fertiliser types, the substantial overlap and wide spread of individual effect sizes highlight that most of the variability remains unexplained by fertiliser type alone.
+This pattern is illustrated in the orchard plot, which shows individual effect size estimates (lnRR) for plant- and animal-based fertilisers, with point sizes scaled by precision (1/SE).
+The black squares represent the model-predicted mean effects for each fertiliser type, with horizontal lines indicating their associated uncertainty intervals.
+Although the mean lnRR differs between fertiliser types, the substantial overlap and wide spread of individual effect sizes highlight that most of the variability remains unexplained by fertiliser type alone.
 
 ::: callout-note
 ### $I^2$ vs $R^2$
+
 $I^2$ and $R^2$ are both measures used in meta-analysis, but they quantify different aspects of variability in effect sizes.
 
-$I^2$ quantifies the proportion of the total observed variance in effect size estimates that is attributable to modelled heterogeneity rather than sampling variance. Its interpretation depends on the specified model structure and on which sources of heterogeneity are included, particularly in multilevel or location–scale meta-analytic models.
+$I^2$ quantifies the proportion of the total observed variance in effect size estimates that is attributable to modelled heterogeneity rather than sampling variance.
+Its interpretation depends on the specified model structure and on which sources of heterogeneity are included, particularly in multilevel or location–scale meta-analytic models.
 
-By contrast, $R^2$ quantifies the proportion of variance in effect sizes that is explained by moderators in a meta-regression framework, conditional on the fitted model. $R^2_{\text{marginal}}$ reflects the extent to which the included moderators explain heterogeneity, whereas $R^2_{\text{conditional}}$ represents the proportion of variance explained by the full model, including both fixed effects and random effects, under the specified variance structure.
+By contrast, $R^2$ quantifies the proportion of variance in effect sizes that is explained by moderators in a meta-regression framework, conditional on the fitted model.
+$R^2_{\text{marginal}}$ reflects the extent to which the included moderators explain heterogeneity, whereas $R^2_{\text{conditional}}$ represents the proportion of variance explained by the full model, including both fixed effects and random effects, under the specified variance structure.
 :::
-
-:::
+::::
 
 ## brms
 
-As we mentioned in the main text, we can use the `brms` package to fit the same multilevel meta-analysis model. There are different ways to run these models, but in this example, we use the `gr()` function to set the sampling variance-covariance matrix. This approach is less common, but it can be much faster than usual (see more detailed information: [link](https://itchyshin.github.io/location-scale_meta-analysis/#brms)).
+As we mentioned in the main text, we can use the `brms` package to fit the same multilevel meta-analysis model.
+There are different ways to run these models, but in this example, we use the `gr()` function to set the sampling variance-covariance matrix.
+This approach is less common, but it can be much faster than usual (see more detailed information: [link](https://itchyshin.github.io/location-scale_meta-analysis/#brms)).
 
 If you are not familiar with `brms`, we highly recommend checking out the instruction of [brms](https://paulbuerkner.com/brms/index.html) first.
 
 ::: panel-tabset
 ### meta-analysis (overall effect)
 
-In the model below, sampling error is explicitly represented using a group-level term with a known variance–covariance structure. The term `(1 | gr(effect_size_ID, cov = vcv))` specifies a random effect whose covariance matrix is fixed to the diagonal matrix of sampling variances for lnRR. This formulation is mathematically equivalent to supplying a sampling variance matrix in `metafor::rma.mv()`, but implemented here using `brms`.
+In the model below, sampling error is explicitly represented using a group-level term with a known variance–covariance structure.
+The term `(1 | gr(effect_size_ID, cov = vcv))` specifies a random effect whose covariance matrix is fixed to the diagonal matrix of sampling variances for lnRR.
+This formulation is mathematically equivalent to supplying a sampling variance matrix in `metafor::rma.mv()`, but implemented here using `brms`.
 
-Because sampling variances are assumed to be known in meta-analysis, the standard deviation of this group-level effect is fixed to *1*. As a result, the magnitude of sampling error is fully determined by the supplied variance–covariance matrix and is not estimated from the data.
+Because sampling variances are assumed to be known in meta-analysis, the standard deviation of this group-level effect is fixed to *1*.
+As a result, the magnitude of sampling error is fully determined by the supplied variance–covariance matrix and is not estimated from the data.
 
 ```{r}
 #| eval: false
@@ -495,16 +548,23 @@ p1 + p2
 
 ```
 
-The estimated overall mean and between-study standard deviation is comparable to the study-level variance component obtained from the `metafor` model. In contrast, the residual parameter `sigma` represents unexplained heterogeneity at the effect-size level beyond sampling error, corresponding to the effect-size-level variance component in `rma.mv`.
+The estimated overall mean and between-study standard deviation is comparable to the study-level variance component obtained from the `metafor` model.
+In contrast, the residual parameter `sigma` represents unexplained heterogeneity at the effect-size level beyond sampling error, corresponding to the effect-size-level variance component in `rma.mv`.
 
-One important point concerns how random effects are reported. In `brms`, random effect estimates are presented as *standard deviations (SD)*, whereas `metafor` reports *variances* . Therefore, to compare estimates between the two packages, you need to square the standard deviation from `brms` to obtain the variance.
+One important point concerns how random effects are reported.
+In `brms`, random effect estimates are presented as *standard deviations (SD)*, whereas `metafor` reports *variances* .
+Therefore, to compare estimates between the two packages, you need to square the standard deviation from `brms` to obtain the variance.
 
+The estimated overall mean and between-study standard deviation are comparable to the study-level variance component obtained from the `metafor` model.
+In contrast, the residual parameter `sigma` represents unexplained heterogeneity at the effect-size level beyond sampling error, corresponding to the effect-size-level variance component in `rma.mv()`.
 
-The estimated overall mean and between-study standard deviation are comparable to the study-level variance component obtained from the `metafor` model. In contrast, the residual parameter `sigma` represents unexplained heterogeneity at the effect-size level beyond sampling error, corresponding to the effect-size-level variance component in `rma.mv()`.
+One important point concerns how random effects are reported.
+In `brms`, random-effect estimates are presented as *standard deviations (SD)*, whereas `metafor` reports variances.
+Therefore, to compare estimates between the two packages, the standard deviations reported by `brms` must be squared to obtain the corresponding variance estimates.
 
-One important point concerns how random effects are reported. In `brms`, random-effect estimates are presented as standard deviations (SD), whereas `metafor` reports variances. Therefore, to compare estimates between the two packages, the standard deviations reported by `brms` must be squared to obtain the corresponding variance estimates.
-
-Finally, small numerical differences between estimates obtained from `brms` and `metafor` are expected, even when the underlying model structures are closely aligned. This is because `brms` fits models using Bayesian inference, which relies on probabilistic sampling to approximate posterior distributions, whereas `metafor` uses frequentist estimation. As a result, point estimates may differ slightly due to Monte Carlo error and differences in estimation frameworks, rather than reflecting substantive discrepancies between the models.
+Finally, small numerical differences between estimates obtained from `brms` and `metafor` are expected, even when the underlying model structures are closely aligned.
+This is because `brms` fits models using Bayesian inference, which relies on probabilistic sampling to approximate posterior distributions, whereas `metafor` uses frequentist estimation.
+As a result, point estimates may differ slightly due to Monte Carlo error and differences in estimation frameworks, rather than reflecting substantive discrepancies between the models.
 
 ### meta-regression
 
@@ -579,18 +639,43 @@ fit_mr1 <- readRDS(here::here("Rdata", "fit_mr1.rds"))
 
 ```
 
-You may wonder why we specify `~1 + Org.fertilizer.type` rather than simply `~ Org.fertilizer.type`. In fact, there is no difference between these two specifications. In R model formulas, an intercept term is included by default, so both formulas fit a model with an intercept.
+You may wonder why we specify `~1 + Org.fertilizer.type` rather than simply `~ Org.fertilizer.type`.
+In fact, there is no difference between these two specifications.
+In R model formulas, an intercept term is included by default, so both formulas fit a model with an intercept.
 
-We write 1 explicitly here for clarity. Doing so makes it clear that the model includes an overall intercept, which represents the baseline mean effect size for the reference level of the moderator. This is particularly helpful in a meta-analytic context, where the intercept has a clear interpretation as the overall mean effect. For this reason, we explicitly include 1 in all model formulas throughout this tutorial. This convention makes the role of the intercept transparent and helps avoid confusion when comparing different model specifications.
+We write 1 explicitly here for clarity.
+Doing so makes it clear that the model includes an overall intercept, which represents the baseline mean effect size for the reference level of the moderator.
+This is particularly helpful in a meta-analytic context, where the intercept has a clear interpretation as the overall mean effect.
+For this reason, we explicitly include 1 in all model formulas throughout this tutorial.
+This convention makes the role of the intercept transparent and helps avoid confusion when comparing different model specifications.
 :::
 
 ## glmmTMB
 
-`glmmTMB` is the popular package for fitting generalised linear mixed models. Unlike dedicated meta-analytic packages such as `metafor`, it does not automatically account for known sampling variances of effect sizes - so when we implement a meta-analysis in `glmmTMB`, we need explicitly specify the sampling error structure of the effect sizes.
+`glmmTMB` is a popular package for fitting generalised linear mixed models.
+Unlike dedicated meta-analytic packages such as `metafor`, it does not allow to easily account for known sampling variances of effect sizes - so when we implement a meta-analysis in `glmmTMB`, we need explicitly specify the sampling error structure of the effect sizes.
 
 In practice, this require three steps:
 
-*1. Constructing a variance-covariance matrix (VCV) that contains the known sampling variances of each effect size*
+*1. Treating each effect size as a unique random-effect level*
+
+```{r}
+
+dat$effect_size_ID <- factor(dat$effect_size_ID)
+```
+
+In `glmmTMB`, grouping variables for random effects must be factors.
+By converting `effect_size_ID` to a factor, we ensure that each effect size is treated as a distinct level in the random-effects structure.
+This step is required for the model to correctly associate each observation with its corresponding sampling variance.
+
+*2. Specifying the random effect independent grouping structure*
+
+```{r}
+
+dat$g <- 1
+```
+
+*3. Constructing a variance-covariance matrix (VCV) that contains the known sampling variances of each effect size*
 
 ```{r}
 
@@ -599,30 +684,16 @@ vcv <- diag(dat$var.lnRR)
 row.names(vcv) <- colnames(vcv) <- dat$effect_size_ID
 ```
 
-Here, we create a variance–covariance matrix whose diagonal elements are the known sampling variances of the effect sizes (`var.lnRR`). Off-diagonal elements are set to zero, reflecting the assumption that effect sizes are independent. This mirrors the standard assumption made in most meta-analyses.
+We create a variance–covariance matrix whose diagonal elements are the known sampling variances of the effect sizes (`var.lnRR`).
+Off-diagonal elements are set to zero, reflecting the assumption that effect sizes are independent.
+This mirrors the standard assumption made in most meta-analyses.
 
-*2. Treating each effect size as a unique random-effect level*
+The `equalto()` term in `glmmTMB` requires a grouping factor.
+The dummy variable `g` serves this purpose, which we set to a single level (one group), i.e. all observations are assigned to the same group. If the grouping factor had more than one level, each group would have a separate independent random-effect vector with the same variance-covariance parameters. For meta-analysis, this grouping dactor should always have one level.
 
-```{r}
+For more details, you can also refer to this vignette: <https://cran.r-project.org/web/packages/glmmTMB/vignettes/covstruct.html>
 
-dat$effect_size_ID <- factor(dat$effect_size_ID)
-```
-
-In `glmmTMB`, grouping variables for random effects must be factors. By converting `effect_size_ID` to a factor, we ensure that each effect size is treated as a distinct level in the random-effects structure. This step is required for the model to correctly associate each observation with its corresponding sampling variance.
-
-*3. Constraining the corresponding random-effect variance structure to be equal to the known VCV*
-
-```{r}
-
-g <- rep(1, nrow(dat))
-```
-
-The `equalto()` term in `glmmTMB` requires a grouping factor, even when all observations belong to a single group. The dummy variable g serves this purpose. All observations are assigned to the same group, while the variance structure across effect sizes is fully defined by the supplied VCV matrix.
-
-Conceptually, this step allows us to include sampling error as a random effect with a fixed, known variance structure.
-
-You can also refer to this supplementary material for more details:
-<https://cran.r-project.org/web/packages/glmmTMB/vignettes/covstruct.html>
+And the following supplementary material for fitting meta-analysis with `glmmTMB`:
 <https://coraliewilliams.github.io/equalto_sim_study/webpage.html>.
 
 ::: panel-tabset
@@ -683,9 +754,16 @@ In short, you should interpret the output as follows:
 All estimate is identical to `metafor` output, and also close to `brms` one.
 
 NOTE:\
-The grouping factor `g` is a technical dummy variable required by `glmmTMB` when using `equalto()` to impose a known variance-covariance structure. All observations belong to a single level of `g`, and the variance structure across effect sizes is entirely defined by the supplied VCV matrix.
+The grouping factor `g` is a technical dummy variable required by `glmmTMB` when using `equalto()` to impose a known variance-covariance structure.
+All observations belong to a single level of `g`, and the variance structure across effect sizes is entirely defined by the supplied VCV matrix.
 
-As a result, the multiple variance components listed under `g` in the model output correspond to the known sampling variances of individual effect sizes and are not estimated parameters. These components should not be interpreted. Only the study-level variance and the residual variance are of substantive interest.
+As a result, the multiple variance components listed under `g` in the model output correspond to the known sampling variances supplied via the VCV matrix rather than free parameters estimated by the model.
+A useful visual check is to confirm that each `effect_size_ID` is associated with an appropriate variance value that matches its sampling variance.
+The output also makes explicit that independence among effect sizes is assumed, as indicated by the zero entries in the `Corr` columns, which provides an additional quick diagnostic check (although substantive interest typically lies in the study-level variance and the residual variance).
+
+::: callout-important
+`0 +` is required when using a structured covariance matrix in `glmmTMB` because it removes the implicit intercept and ensures a one-to-one correspondence between the random-effect coefficients and the rows and columns of the supplied covariance matrix; otherwise, the covariance structure is mis-specified (see - <https://cran.r-project.org/web/packages/glmmTMB/vignettes/covstruct.html#construction-of-structured-covariance-matrices>).
+:::
 
 ### meta-regression
 
@@ -743,9 +821,9 @@ Great - the estimates match those from `metafor` and are also very close to the 
 
 In this section we analyse variability effects using **lnCVR** and **lnVR**.
 
--    **lnCVR** quantifies the log ratio of coefficients of variation (CVs), that is, changes in **relative variability** after accounting for mean differences.
+-   **lnCVR** quantifies the log ratio of coefficients of variation (CVs), that is, changes in **relative variability** after accounting for mean differences.
 
--    **lnVR** quantifies the log ratio of standard deviations (SDs), that is, changes in **absolute variability** between groups.
+-   **lnVR** quantifies the log ratio of standard deviations (SDs), that is, changes in **absolute variability** between groups.
 
 ## metafor
 
@@ -803,9 +881,10 @@ orchard_ma_lnCVR
 
 ```
 
-The intercept from the multilevel meta-analysis represents the overall mean lnCVR across all comparisons. A positive estimate indicates that the treatment group has a larger CV than the control group, meaning greater relative variability (lower stability) after accounting for potential differences in the mean values. 
+The intercept from the multilevel meta-analysis represents the overall mean lnCVR across all comparisons.
+A positive estimate indicates that the treatment group has a larger CV than the control group, meaning greater relative variability (lower stability) after accounting for potential differences in the mean values.
 
-Here, the estimated lnCVR is $\beta_0$ = 0.34 (95\% CI= [0.20, 0.48]), suggesting that organic farming is associated with approximately 41% higher relative variability in crop yields compared to conventional farming (= exp(0.34)−1).
+Here, the estimated lnCVR is $\beta_0$ = 0.34 (95% CI= \[0.20, 0.48\]), suggesting that organic farming is associated with approximately 41% higher relative variability in crop yields compared to conventional farming (= exp(0.34)−1).
 
 $I^2$ values indicate that a substantial portion of the total heterogeneity ($I^2_{\text{Total}}$ = 56.53%) arises from variability among effect sizes within studies ($I^2_{\text{within}}$ = 47.01%), while a smaller share is due to variability between studies ($I^2_{\text{between}}$ = 9.52%).
 
@@ -860,14 +939,22 @@ orchard_ma_lnVR
 
 ```
 
-The overall lnVR estimate is close to zero and the 95% CI overlaps zero ($\beta_0$ = 0.02, 95\% CI = [-0.11, 0.15]), indicating little evidence for a systematic difference in SD between the two groups. On the original scale, this corresponds to an SD ratio close to one, suggesting that the magnitude of within-group variation is broadly similar between the two comparison groups..
+The overall lnVR estimate is close to zero and the 95% CI overlaps zero ($\beta_0$ = 0.02, 95% CI = \[-0.11, 0.15\]), indicating little evidence for a systematic difference in SD between the two groups.
+On the original scale, this corresponds to an SD ratio close to one, suggesting that the magnitude of within-group variation is broadly similar between the two comparison groups..
 
-Despite the absence of a clear average lnVR effect, heterogeneity is substantial. The test for heterogeneity is highly significant, and approximately half of the observed variability in lnVR cannot be attributed to sampling error alone ($I^2 \approx$ 50.6%). Only a smaller proportion of this heterogeneity is attributable to between-study differences ($I^2 \approx$ 12.8%), whereas a larger share arises at the effect-size level within studies ($I^2 \approx$ 37.8%). This pattern indicates considerable context dependence or within-study variation in absolute variability effects, even though the average effect across all comparisons is close to zero.
+Despite the absence of a clear average lnVR effect, heterogeneity is substantial.
+The test for heterogeneity is highly significant, and approximately half of the observed variability in lnVR cannot be attributed to sampling error alone ($I^2 \approx$ 50.6%).
+Only a smaller proportion of this heterogeneity is attributable to between-study differences ($I^2 \approx$ 12.8%), whereas a larger share arises at the effect-size level within studies ($I^2 \approx$ 37.8%).
+This pattern indicates considerable context dependence or within-study variation in absolute variability effects, even though the average effect across all comparisons is close to zero.
 
-When considered alongside lnCVR, a clearer picture emerges. While lnVR shows little evidence for a consistent difference in absolute variability, lnCVR indicates a positive average effect, suggesting higher relative variability (CV) in the treatment group. This divergence arises because lnCVR explicitly standardises variability by the mean, whereas lnVR does not. When group means differ, absolute variability may remain similar (lnVR $\approx$ 0) while relative variability increases (lnCVR > 0).
+When considered alongside lnCVR, a clearer picture emerges.
+While lnVR shows little evidence for a consistent difference in absolute variability, lnCVR indicates a positive average effect, suggesting higher relative variability (CV) in the treatment group.
+This divergence arises because lnCVR explicitly standardises variability by the mean, whereas lnVR does not.
+When group means differ, absolute variability may remain similar (lnVR $\approx$ 0) while relative variability increases (lnCVR \> 0).
 
-In practical terms, this pattern implies that outcomes may scale with the mean. Although the absolute spread of values is comparable across groups, the spread is larger relative to the expected outcome under the treatment condition. Consequently, differences in variability are more apparent on the mean-standardised scale than on the absolute scale.
-
+In practical terms, this pattern implies that outcomes may scale with the mean.
+Although the absolute spread of values is comparable across groups, the spread is larger relative to the expected outcome under the treatment condition.
+Consequently, differences in variability are more apparent on the mean-standardised scale than on the absolute scale.
 
 ### meta-regression
 
@@ -991,18 +1078,21 @@ orchard_plot(mod_lnVR_mr,
 
 ```
 
-Including fertiliser type as a moderator provided little evidence that it systematically explains variability effects on either scale. Here, the moderator coefficient represents the difference between plant-based and animal-based fertilisers (plant − animal).
+Including fertiliser type as a moderator provided little evidence that it systematically explains variability effects on either scale.
+Here, the moderator coefficient represents the difference between plant-based and animal-based fertilisers (plant − animal).
 
-For lnCVR, the estimated moderator effect was small and highly uncertain ($\beta_{\text{plant-animal}}$ = 0.064, 95\% CI = [-0.17, 0.29]), indicating that relative variability does not differ consistently between fertiliser categories.
+For lnCVR, the estimated moderator effect was small and highly uncertain ($\beta_{\text{plant-animal}}$ = 0.064, 95% CI = \[-0.17, 0.29\]), indicating that relative variability does not differ consistently between fertiliser categories.
 
-Similarly, for lnVR, there was no clear support for fertiliser-type differences in absolute variability ($\beta_{\text{plant-animal}}$ = −0.164, 95\% CI = [-0.37, 0.04]). Although the point estimate suggested a tendency toward lower lnVR for plant-based fertilisers relative to animal-based fertilisers, this effect was highly uncertain and not statistically supported.
+Similarly, for lnVR, there was no clear support for fertiliser-type differences in absolute variability ($\beta_{\text{plant-animal}}$ = −0.164, 95% CI = \[-0.37, 0.04\]).
+Although the point estimate suggested a tendency toward lower lnVR for plant-based fertilisers relative to animal-based fertilisers, this effect was highly uncertain and not statistically supported.
 
-In both models, substantial residual heterogeneity remained after accounting for fertiliser type, with large effect-size–level variance components (lnCVR: $\sigma^2$ = 0.30; lnVR: $\sigma^2$ = 0.19). This indicates that neither relative nor absolute variability effects are well captured by this single moderator.
-
+In both models, substantial residual heterogeneity remained after accounting for fertiliser type, with large effect-size–level variance components (lnCVR: $\sigma^2$ = 0.30; lnVR: $\sigma^2$ = 0.19).
+This indicates that neither relative nor absolute variability effects are well captured by this single moderator.
 :::
 
 ## brms
-When fitted with equivalent model structures, the `metafor` and `brms` implementations yield nearly identical estimates for both the overall effects and variance components. 
+
+When fitted with equivalent model structures, the `metafor` and `brms` implementations yield nearly identical estimates for both the overall effects and variance components.
 
 ::: panel-tabset
 ### meta-analysis (overall effect)
@@ -1149,9 +1239,10 @@ p1 + p2
 
 ```
 
-
 ### meta-regression
-When specified with equivalent fixed and random effects and the same sampling variance structure, the `brms` and `metafor` meta-regression models yield nearly identical results. Differences between outputs reflect estimation framework (Bayesian vs frequentist) rather than substantive differences in model inference. 
+
+When specified with equivalent fixed and random effects and the same sampling variance structure, the `brms` and `metafor` meta-regression models yield nearly identical results.
+Differences between outputs reflect estimation framework (Bayesian vs frequentist) rather than substantive differences in model inference.
 
 #### lnCVR
 
@@ -1277,6 +1368,7 @@ summary(fit_mr3)
 :::
 
 ## glmmTMB
+
 We can also fit the same meta-analytic and meta-regression models using `glmmTMB`.
 The outputs are very similar to those from `metafor` and `brms`.
 
@@ -1481,12 +1573,12 @@ summary(glmm_lnVR_mr)
 # Org.fertilizer.typeplant -0.16443    0.10620  -1.548    0.122
 
 ```
-
 :::
 
 # Models 3 and 4: Location-scale meta-regression models
 
-We now extend the above meta-analyses to location–scale meta-regression models, which allow us to examine whether both the mean effect size and the variability of effect sizes depend on a moderator variable. Here, we use `Org.fertilizer.type` (plant-based vs animal-based organic fertiliser) as a moderator.
+We now extend the above meta-analyses to location–scale meta-regression models, which allow us to examine whether both the mean effect size and the variability of effect sizes depend on a moderator variable.
+Here, we use `Org.fertilizer.type` (plant-based vs animal-based organic fertiliser) as a moderator.
 
 -   The location component answers the question:\
     Does the mean effect size (i.e. lnRR, lnCVR, lnVR) differ between plant-based and animal-based organic fertilisers?
@@ -1496,7 +1588,9 @@ We now extend the above meta-analyses to location–scale meta-regression models
 
 ## metafor
 
-At present, `metafor` does not support fully multilevel location–scale meta-analytic models. However, it is possible to fit a simpler location–scale model using the `scale` argument in `rma()`. This approach allows the residual heterogeneity to vary as a function of moderators, but does not accommodate multilevel random-effects structures.
+At present, `metafor` does not support fully multilevel location–scale meta-analytic models (but it is currently under development - the random effects will soon be available to fit in scale!).
+However, it is possible to fit a simpler location–scale model using the `scale` argument in `rma()`.
+This approach allows the residual heterogeneity to vary as a function of moderators, but does not accommodate multilevel random-effects structures.
 
 Below, we demonstrate two types of models:
 
@@ -1505,16 +1599,18 @@ A.  Simple location–scale meta-regression
 B.  Multilevel heteroscedastic meta-regression
 
 ::: callout-note
-It is best to treat the `metafor` models presented above as approximations to full multilevel location-scale meta-analytic models. 
-Although these models are extremely useful and sometimes sufficient in practice, ecological datasets often show more complex hierarchical structures, such as multiple effect sizes per study, evolutionary independence, or other sources of non-independence. 
-To explicitly consider such complexity, more flexible modelling frameworks are required. In the following two sections, we introduce location-scale meta-analytic models fitted using `brms` and `glmmTMB`. 
+It is best to treat the `metafor` models presented above as approximations to full multilevel location-scale meta-analytic models.
+Although these models are extremely useful and sometimes sufficient in practice, ecological datasets often show more complex hierarchical structures, such as multiple effect sizes per study, evolutionary independence, or other sources of non-independence.
+To explicitly consider such complexity, more flexible modelling frameworks are required.
+In the following two sections, we introduce location-scale meta-analytic models fitted using `brms` and `glmmTMB`.
 These approach arrow the specification of rich multilevel structures, and in particular, `brms` enables the fitting of fully Bayesian location-scale models with complex random effects and covariance structures (though if we want to run this type of model, we need a lot of data…)
 :::
 
-::: panel-tabset
+:::: panel-tabset
 ### A. Simple (no random effects on location and scale components)
 
-The formulation using `rma()` provides a straightforward way to test whether variability in effect sizes depends on the moderator, but it treats all effect sizes as independent and does not include a multilevel structure. `scale` argument allows us to specify a model for the residual variance, enabling us to test whether the variability of effect sizes differs across levels of the moderator.
+The formulation using `rma()` provides a straightforward way to test whether variability in effect sizes depends on the moderator, but it treats all effect sizes as independent and does not include a multilevel structure.
+`scale` argument allows us to specify a model for the residual variance, enabling us to test whether the variability of effect sizes differs across levels of the moderator.
 
 #### lnRR
 
@@ -1642,19 +1738,22 @@ summary(mod_lnVR_ls)
 
 ```
 
-The models suggest that plant-based fertilisers are associated with both lower mean effects and substantially greater variability across studies. In particular, the scale component indicates that effect sizes are markedly more dispersed for plant-based fertilisers across all three variability metrics. However, these models treat all effect sizes as independent and do not account for the multilevel structure of the data.
+The models suggest that plant-based fertilisers are associated with both lower mean effects and substantially greater variability across studies.
+In particular, the scale component indicates that effect sizes are markedly more dispersed for plant-based fertilisers across all three variability metrics.
+However, these models treat all effect sizes as independent and do not account for the multilevel structure of the data.
 <!-- Should we add the estimated values? -->
 
 ### B. Heteroscedastic meta-regression
-Heteroscedastic meta-regression models allow residual variance to differ across levels of a moderator while incorporating a multilevel random-effects structure. 
-By relaxing the assumption of constant heterogeneity, these models permit different levels of a moderator to be associated with different amounts of residual variability. 
-Although this approach does not constitute a full multilevel location–scale model, it provides a useful intermediate step toward more flexible variance modelling. 
+
+Heteroscedastic meta-regression models allow residual variance to differ across levels of a moderator while incorporating a multilevel random-effects structure.
+By relaxing the assumption of constant heterogeneity, these models permit different levels of a moderator to be associated with different amounts of residual variability.
+Although this approach does not constitute a full multilevel location–scale model, it provides a useful intermediate step toward more flexible variance modelling.
 In particular, it enables the examination of moderator effects on both the mean effect size and the residual heterogeneity while accounting for the multilevel structure of the data.
 
-In the present heteroscedastic meta-regression, the random-effects structure `~ Org.fertilizer.type | effect_size_ID` allows residual heterogeneity at the effect-size level to differ across fertiliser types. 
+In the present heteroscedastic meta-regression, the random-effects structure `~ Org.fertilizer.type | effect_size_ID` allows residual heterogeneity at the effect-size level to differ across fertiliser types.
 By specifying `struct = "DIAG"`, the model estimates fertiliser-type-specific variances without assuming covariance between categories, thereby relaxing the assumption of homogeneous residual variability while retaining a parsimonious specification.
 
-:::callout-tip
+::: callout-tip
 We used this heteroscedastic meta-regression models for figures 3A and 3B in the main text.
 :::
 
@@ -1827,40 +1926,50 @@ orchard_mr_lnVR
 
 ```
 
-In the heteroscedastic meta-regression for lnRR, residual heterogeneity at the effect-size level differed between fertiliser types, with larger heterogeneity for plant-based fertilisers ($\tau^2$ = 0.094) than for animal-based fertilisers ($\tau^2$  = 0.067).
-The location component indicated a significantly lower mean lnRR for plant-based fertilisers relative to animal-based fertilisers (estimate = −0.14, 95\% CI = [-0.25,  -0.03]). Thus, even after accounting for multilevel structure, plant-based fertilisers were associated with both lower mean effects and moderately greater residual heterogeneity.
+In the heteroscedastic meta-regression for lnRR, residual heterogeneity at the effect-size level differed between fertiliser types, with larger heterogeneity for plant-based fertilisers ($\tau^2$ = 0.094) than for animal-based fertilisers ($\tau^2$ = 0.067).
+The location component indicated a significantly lower mean lnRR for plant-based fertilisers relative to animal-based fertilisers (estimate = −0.14, 95% CI = \[-0.25, -0.03\]).
+Thus, even after accounting for multilevel structure, plant-based fertilisers were associated with both lower mean effects and moderately greater residual heterogeneity.
 
-For lnCVR, allowing residual heterogeneity to vary across fertiliser types revealed substantial differences in heterogeneity magnitude. 
-Effect-size–level heterogeneity was markedly larger for plant-based fertilisers ($\tau^2$ = 0.54) than for animal-based fertilisers ($\tau^2$ = 0.19). 
-However, the location effect of fertiliser type on mean lnCVR remained small and statistically unsupported (estimate = 0.08, 95\% CI = [-0.15, 0.32]), indicating no consistent difference in average relative variability between fertiliser categories.
+For lnCVR, allowing residual heterogeneity to vary across fertiliser types revealed substantial differences in heterogeneity magnitude.
+Effect-size–level heterogeneity was markedly larger for plant-based fertilisers ($\tau^2$ = 0.54) than for animal-based fertilisers ($\tau^2$ = 0.19).
+However, the location effect of fertiliser type on mean lnCVR remained small and statistically unsupported (estimate = 0.08, 95% CI = \[-0.15, 0.32\]), indicating no consistent difference in average relative variability between fertiliser categories.
 
-A similar pattern was observed for lnVR. Residual heterogeneity was considerably larger for plant-based fertilisers ($\tau^2$ = 0.51) than for animal-based fertilisers ($\tau^2$ = 0.03), suggesting pronounced differences in the dispersion of absolute variability across fertiliser types. 
-In contrast, the location effect on mean lnVR was not statistically supported (estimate = −0.15, 95\% CI = [-0.37, 0.06]), indicating weak evidence for systematic differences in average absolute variability.
-
-:::
+A similar pattern was observed for lnVR.
+Residual heterogeneity was considerably larger for plant-based fertilisers ($\tau^2$ = 0.51) than for animal-based fertilisers ($\tau^2$ = 0.03), suggesting pronounced differences in the dispersion of absolute variability across fertiliser types.
+In contrast, the location effect on mean lnVR was not statistically supported (estimate = −0.15, 95% CI = \[-0.37, 0.06\]), indicating weak evidence for systematic differences in average absolute variability.
+::::
 
 ## brms
 
-`brms` provides a flexible framework for fitting location–scale (LS) models, in which the mean structure of the response variable (the location component) and the residual variability around that mean (the scale component) are modelled simultaneously. This allows us to examine not only how predictors affect average effect sizes, but also how they influence heterogeneity.
+`brms` provides a flexible framework for fitting location–scale (LS) models, in which the mean structure of the response variable (the location component) and the residual variability around that mean (the scale component) are modelled simultaneously.
+This allows us to examine not only how predictors affect average effect sizes, but also how they influence heterogeneity.
 
-In this tutorial, we focus primarily on a location–scale meta-regression model with fixed effects in the scale component. This model represents the most stable and interpretable formulation and serves as the main working example throughout the `brms` section.
+In this tutorial, we focus primarily on a location–scale meta-regression model with fixed effects in the scale component.
+This model represents the most stable and interpretable formulation and serves as the main working example throughout the `brms` section.
 
 For completeness, we also briefly introduce two more complex extensions:
 
-A.  Location–scale meta-regression with fixed effects in the scale component. \
-This is the primary model used in this tutorial and the only one for which we provide full interpretation of results.
+A.  Location–scale meta-regression with fixed effects in the scale component.\
+    This is the primary model used in this tutorial and the only one for which we provide full interpretation of results.
 
-B.  Location–scale meta-regression with random effects in the scale component. \
-This model allows heterogeneity to vary across higher-level grouping factors (for example, studies), but may be difficult to fit reliably in practice.
+B.  Location–scale meta-regression with random effects in the scale component.\
+    This model allows heterogeneity to vary across higher-level grouping factors (for example, studies), but may be difficult to fit reliably in practice.
 
-C.  Location–scale meta-regression with correlated random effects in the location and scale components. \
-This formulation allows the mean and heterogeneity to be evolutionarily or structurally linked, but often suffers from convergence issues in applied meta-analytic datasets.
+C.  Location–scale meta-regression with correlated random effects in the location and scale components.\
+    This formulation allows the mean and heterogeneity to be evolutionarily or structurally linked, but often suffers from convergence issues in applied meta-analytic datasets.
 
-Models B and C are included to illustrate the range of model structures that are theoretically possible in `brms`. We provide one concrete example of each, but we do not interpret their results in detail, as these models frequently exhibit convergence problems and require a lot of data. If you are interested in more detail, please check Nakagawa et al. (2025[a](https://doi.org/10.1111/gcb.70204), [b](https://doi.org/10.1111/2041-210x.70203)).
+Models B and C are included to illustrate the range of model structures that are theoretically possible in `brms`.
+We provide one concrete example of each, but we do not interpret their results in detail, as these models frequently exhibit convergence problems and require a lot of data.
+If you are interested in more detail, please check Nakagawa et al. (2025[a](https://doi.org/10.1111/gcb.70204), [b](https://doi.org/10.1111/2041-210x.70203)).
 
-It is worth noting that, in the models presented here, we specify the scale component using the `sigma ~` syntax in `brms`. This choice reflects the use of a Gaussian response distribution, for which `sigma` represents the residual standard deviation. For other response distributions, the scale component may be parametrised differently in `brms` (for example, using `shape` or `phi` - see [here](https://ayumi-495.github.io/Eco_location-scale_model/#specifying-the-scale-component)), and the corresponding model formula should be adapted accordingly.
+It is worth noting that, in the models presented here, we specify the scale component using the `sigma ~` syntax in `brms`.
+This choice reflects the use of a Gaussian response distribution, for which `sigma` represents the residual standard deviation.
+For other response distributions, the scale component may be parametrised differently in `brms` (for example, using `shape` or `phi` - see [here](https://ayumi-495.github.io/Eco_location-scale_model/#specifying-the-scale-component)), and the corresponding model formula should be adapted accordingly.
 
 ::: callout-note
+### Keep in your mind…
+In the location–scale models by `brms`, dispersion parameters are modelled on the log standard deviation scale ($ln(\sigma)$). All coefficients for the scale component should therefore be interpreted as effects on the log standard deviation, not on the variance.
+
 ### Practical guidance
 
 Models with random effects in the scale component, and especially models with correlated random effects across location and scale, require:
@@ -1873,7 +1982,8 @@ Models with random effects in the scale component, and especially models with co
 
 -   Thorough convergence diagnostics
 
-For these reasons, we treat Models A and B as examples. We recommend that readers begin with a simpler location–scale model that uses fixed effects in the scale part, and only add complexity if the data clearly support it, and also, you have enough data.
+For these reasons, we treat Models A and B as examples.
+We recommend that readers begin with a simpler location–scale model that uses fixed effects in the scale part, and only add complexity if the data clearly support it, and also, you have enough data.
 :::
 
 ::: panel-tabset
@@ -1881,7 +1991,8 @@ For these reasons, we treat Models A and B as examples. We recommend that reader
 
 In this model, we include fixed effects in both location and scale components, but no random effects in the scale component (of course, we can include any random effects on location component).
 
-Between-study heterogeneity in mean effect sizes is captured through a random intercept for `study_ID` in the location component, and residual heterogeneity is allowed to vary systematically with predictors via fixed effects in the scale component. No random variation in residual variance across studies is assumed.
+Between-study heterogeneity in mean effect sizes is captured through a random intercept for `study_ID` in the location component, and residual heterogeneity is allowed to vary systematically with predictors via fixed effects in the scale component.
+No random variation in residual variance across studies is assumed.
 
 #### lnRR
 
@@ -1951,12 +2062,13 @@ p3 <- visualize_fixed_effects(fit_ls_ma1)
 p4 <- visualize_random_effects2(fit_ls_ma1)
 ```
 
-For lnRR, the location component indicated a negative average effect under animal-based fertilisers ($\beta^{(l)}_{\text{animal}}$ = -0.26, 95\% credible interval CrI = [−0.38, −0.16]), implying that organic yields are, on average, lower than conventional yields under animal-based fertilisation.
-The contrast coefficient for fertiliser type was also negative ($\beta^{(l)}_{\text{animal-plant}}$ = -0.15, 95\% CrI [−0.27, −0.03]), indicating an additional yield penalty under plant-based fertilisers relative to animal-based fertilisers. 
-On the response-ratio scale, these estimates correspond to an expected organic yield of $\exp(\beta_0)$ = $\exp$(-0.26) $\approx$ 0.77, or about 23% lower than conventional yields, under animal-based fertilisers (the reference category). For plant-based fertilisers, the predicted response ratio is given by $\exp(\beta_0$ + $\beta_{\text{plant}}$) = $\exp$(-0.26 - 0.15) $\approx 0.66$, corresponding to organic yields that are approximately 34% lower than conventional yields.
+For lnRR, the location component indicated a negative average effect under animal-based fertilisers ($\beta^{(l)}_{\text{animal}}$ = -0.26, 95% credible interval CrI = \[−0.38, −0.16\]), implying that organic yields are, on average, lower than conventional yields under animal-based fertilisation.
+The contrast coefficient for fertiliser type was also negative ($\beta^{(l)}_{\text{animal-plant}}$ = -0.15, 95% CrI \[−0.27, −0.03\]), indicating an additional yield penalty under plant-based fertilisers relative to animal-based fertilisers.
+On the response-ratio scale, these estimates correspond to an expected organic yield of $\exp(\beta_0)$ = $\exp$(-0.26) $\approx$ 0.77, or about 23% lower than conventional yields, under animal-based fertilisers (the reference category).
+For plant-based fertilisers, the predicted response ratio is given by $\exp(\beta_0$ + $\beta_{\text{plant}}$) = $\exp$(-0.26 - 0.15) $\approx 0.66$, corresponding to organic yields that are approximately 34% lower than conventional yields.
 
-The scale component, modelled on the log-$\sigma$ scale, suggested a tendency towards greater residual heterogeneity under plant-based fertilisers ($\beta^{(s)}_{\text{animal-plant}}$ = 0.17, 95\% CrI = [−0.01, 0.35]). 
-This corresponds to an approximate 19\% increase in residual heterogeneity for plant-based systems (\exp(0.17)-1 $\approx$ 0.19), although the credible interval still overlapped zero, indicating moderate uncertainty in the magnitude of this effect.
+The scale component, modelled on the log-$\sigma$ scale, suggested a tendency towards greater residual heterogeneity under plant-based fertilisers ($\beta^{(s)}_{\text{animal-plant}}$ = 0.17, 95% CrI = \[−0.01, 0.35\]).
+This corresponds to an approximate 19% increase in residual heterogeneity for plant-based systems (\exp(0.17)-1 $\approx$ 0.19), although the credible interval still overlapped zero, indicating moderate uncertainty in the magnitude of this effect.
 
 #### lnCVR
 
@@ -2032,31 +2144,43 @@ p3 + p4
 
 ```
 
-For lnCVR, the location component indicated that organic systems tend to exhibit higher mean-corrected variability under animal-based fertilisers ($\beta^{(l)}_{\text{animal}}$ = 0.30, 95\% CrI = [0.13, 0.48]), corresponding to an average CV ratio of \exp(0.30) $\approx$ 1.35 - roughly 35% higher variability in organic relative to conventional systems.
+For lnCVR, the location component indicated that organic systems tend to exhibit higher mean-corrected variability under animal-based fertilisers ($\beta^{(l)}_{\text{animal}}$ = 0.30, 95% CrI = \[0.13, 0.48\]), corresponding to an average CV ratio of \exp(0.30) $\approx$ 1.35 - roughly 35% higher variability in organic relative to conventional systems.
 
-The contrast coefficient for fertiliser type in the location component was small and highly uncertain
-($\beta^{(l)}_{\text{animal-plant}}$ = 0.08, 95\% CrI [−0.17, 0.32]), suggesting that fertiliser category does not systematically shift the average stability difference between organic and conventional systems.
+The contrast coefficient for fertiliser type in the location component was small and highly uncertain ($\beta^{(l)}_{\text{animal-plant}}$ = 0.08, 95% CrI \[−0.17, 0.32\]), suggesting that fertiliser category does not systematically shift the average stability difference between organic and conventional systems.
 
-In contrast, the scale component revealed clear evidence that fertiliser type strongly governs the predictability of lnCVR effects. Residual heterogeneity was substantially larger under plant-based fertilisers $(\beta^{(s)}_{\text{animal-plant}}$ = 0.51, 95% CrI [0.15, 0.87]), corresponding to a multiplicative increase in residual variability of approximately 68% (\exp(0.51) $\approx$ 1.68). Under this model, the implied residual standard deviation for lnCVR under plant-based fertilisers is $\sigma \approx \exp$(-0.83 + 0.51) $\approx$ 0.73.
+In contrast, the scale component revealed clear evidence that fertiliser type strongly governs the predictability of lnCVR effects.
+Residual heterogeneity was substantially larger under plant-based fertilisers $(\beta^{(s)}_{\text{animal-plant}}$ = 0.51, 95% CrI \[0.15, 0.87\]), corresponding to a multiplicative increase in residual variability of approximately 68% (\exp(0.51) $\approx$ 1.68).
+Under this model, the implied residual standard deviation for lnCVR under plant-based fertilisers is $\sigma \approx \exp$(-0.83 + 0.51) $\approx$ 0.73.
 
-Thus, while the expected magnitude of the stability gap (lnCVR) is broadly similar across fertiliser categories, the evidence is far less transferable under plant-based fertilisers. Some studies show near parity in stability between organic and conventional systems, whereas others show much larger differences, indicating strong context dependence.
+Thus, while the expected magnitude of the stability gap (lnCVR) is broadly similar across fertiliser categories, the evidence is far less transferable under plant-based fertilisers.
+Some studies show near parity in stability between organic and conventional systems, whereas others show much larger differences, indicating strong context dependence.
 
 <!-- #### lnVR -->
+
 <!-- not converged!! -->
+
 <!-- ```{r} -->
+
 <!-- #| eval: false -->
 
 <!-- form_ls_ma3 <- bf(lnVR ~ 1 + Org.fertilizer.type + -->
+
 <!--                     (1|study_ID) + # this is u_l (the between-study effect) -->
+
 <!--                     (1|gr(effect_size_ID, cov = vcv)), # this is m (sampling error) -->
+
 <!--                   sigma ~ 1 +  Org.fertilizer.type -->
+
 <!--                   ) -->
 
 <!-- # generate default priors -->
 
 <!-- prior_ls_ma3 <- default_prior(form_ls_ma3, -->
+
 <!--                               data=dat, -->
+
 <!--                               data2=list(vcv=vcv), -->
+
 <!--                               family=gaussian()) -->
 
 <!-- prior_ls_ma3$prior[5] = "constant(1)" # meta-analysis assumes -->
@@ -2064,28 +2188,43 @@ Thus, while the expected magnitude of the stability gap (lnCVR) is broadly simil
 <!-- # fitting model -->
 
 <!-- fit_ls_ma3 <- brm( -->
+
 <!--   formula = form_ls_ma3, -->
+
 <!--   data = dat, -->
+
 <!--   data2 = list(vcv=vcv), -->
+
 <!--   chains = 2, -->
+
 <!--   cores = 2, -->
+
 <!--   iter = 6000, -->
+
 <!--   warmup = 3000, -->
+
 <!--   prior = prior_ls_ma3, -->
+
 <!--   control = list(adapt_delta=0.95, max_treedepth=15) -->
+
 <!--   ) -->
+
 <!-- summary(fit_ls_ma3) -->
 
 <!-- ``` -->
 
 <!-- ```{r} -->
+
 <!-- #| eval: false -->
+
 <!-- #| echo: false -->
+
 <!-- #| fig-align: center -->
 
 <!-- fit_ls_ma3 <- readRDS(here::here("Rdata", "fit_ls_ma3.rds")) -->
 
 <!-- p3 <- visualize_fixed_effects(fit_ls_ma3) -->
+
 <!-- p4 <- visualize_random_effects2(fit_ls_ma3) -->
 
 <!-- p3 + p4 -->
@@ -2096,14 +2235,17 @@ Thus, while the expected magnitude of the stability gap (lnCVR) is broadly simil
 
 The models presented here extend the basic location–scale meta-regression by allowing study-level heterogeneity to operate not only on the mean effect size, but also on the residual variance.
 
-These models are included for completeness and to illustrate the flexibility of `brms`. In practice, they are often difficult to fit reliably and should be treated as advanced extensions rather than default choices. Accordingly, we provide example code but do not interpret the results in detail.
+These models are included for completeness and to illustrate the flexibility of `brms`.
+In practice, they are often difficult to fit reliably and should be treated as advanced extensions rather than default choices.
+Accordingly, we provide example code but do not interpret the results in detail.
 
-For transparency, examples in which the models were run but failed to converge are also documented in this [online tutorial](https://itchyshin.github.io/location-scale_meta-analysis/). 
+For transparency, examples in which the models were run but failed to converge are also documented in this [online tutorial](https://itchyshin.github.io/location-scale_meta-analysis/).
 You can also find more examples of complex location-scale models in another [online tutorial](https://ayumi-495.github.io/Eco_location-scale_model/), though these are not specific to meta-analysis.
 
-**2. with random effects in scale component**
+**1. with random effects in scale component**
 
-In the model with the random effects in the scale component, we can include random effects in the scale component, allowing residual heterogeneity to vary across studies. If we want to specify such a model, we can do so as follows:
+In the model with the random effects in the scale component, we can include random effects in the scale component, allowing residual heterogeneity to vary across studies.
+If we want to specify such a model, we can do so as follows:
 
 ```{r}
 #| eval: false
@@ -2112,13 +2254,16 @@ sigma ~ 1 + Org.fertilizer.type + (1 | study_ID)
 
 ```
 
-This specification allows the residual variance to vary across studies, in addition to allowing study-level variation in the mean effect size via the location component. Conceptually, the location component models how the mean effect size varies with the moderator and across studies. The scale component models how the amount of unexplained variability differs across studies and fertiliser types.
+This specification allows the residual variance to vary across studies, in addition to allowing study-level variation in the mean effect size via the location component.
+Conceptually, the location component models how the mean effect size varies with the moderator and across studies.
+The scale component models how the amount of unexplained variability differs across studies and fertiliser types.
 
 Random effects in the location and scale components are assumed to be independent in this formulation.
 
-**3. Correlated random effects in location and scale components**
+**2. Correlated random effects in location and scale components**
 
-The third model further extends the previous formulation by allowing correlated random effects between the location and scale components. For example, if we want to consider potential correlations between study-level deviations in mean effect sizes and deviations in residual variance, we can specify the model as follows:
+The next model further extends the previous formulation by allowing correlated random effects between the location and scale components.
+For example, if we want to consider potential correlations between study-level deviations in mean effect sizes and deviations in residual variance, we can specify the model as follows:
 
 ```{r}
 #| eval: false
@@ -2129,9 +2274,11 @@ The third model further extends the previous formulation by allowing correlated 
 
 This specification allows the model to estimate the correlation between study-level deviations in the mean effect size and deviations in residual variance.
 
-For example, a negative correlation would indicate that studies with larger mean effects tend to show lower residual variability, whereas a positive correlation would suggest the opposite. Such relationships are conceptually appealing and biologically interpretable in some contexts.
+For example, a negative correlation would indicate that studies with larger mean effects tend to show lower residual variability, whereas a positive correlation would suggest the opposite.
+Such relationships are conceptually appealing and biologically interpretable in some contexts.
 
-However, this model is computationally demanding and highly sensitive to prior specification and data structure. In applied meta-analyses, it frequently exhibits convergence problems or weakly identified correlation parameters.
+However, this model is computationally demanding and highly sensitive to prior specification and data structure.
+In applied meta-analyses, it frequently exhibits convergence problems or weakly identified correlation parameters.
 :::
 
 ## glmmTMB
@@ -2142,9 +2289,15 @@ But it should be mentioned that `glmmTMB` does not support correlated random eff
 
 Again, the same as `brms`, we focus on a location–scale meta-regression model with fixed effects in the scale component.
 
+::: callout-note
+### Keep in your mind…
+In the location–scale models by `glmmTMB`, dispersion parameters are modelled on the log standard deviation scale ($ln(\sigma)$). All coefficients for the scale component should therefore be interpreted as effects on the log standard deviation, not on the variance.
+:::
+
 ### A. Only fixed effects in scale component
-In `glmmTMB`, the location–scale structure is implemented by separating the model into a *conditional* component and a *dispersion* component. 
-The conditional model specifies the mean structure of the response (location), while the dispersion model specifies how the residual variance changes as a function of predictors (scale). 
+
+In `glmmTMB`, the location–scale structure is implemented by separating the model into a *conditional* component and a *dispersion* component.
+The conditional model specifies the mean structure of the response (location), while the dispersion model specifies how the residual variance changes as a function of predictors (scale).
 Note that the dispersion model in `glmmTMB` does not describe an additional random effect, but rather models heteroscedasticity in the residual variance on the log scale.
 
 As shown below, the location–scale models with `glmmTMB` produce results that match those from `brms` completely.
