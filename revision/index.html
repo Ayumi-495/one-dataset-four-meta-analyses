@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-08-20">
+<meta name="dcterms.date" content="2026-08-21">
 
 <title>TUTORIAL: One dataset, four meta-analyses: synthesising mean effects, within-population variability, and between-population heterogeneity in ecology</title>
 <style>
@@ -2405,7 +2405,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 20, 2026</p>
+      <p class="date">August 21, 2026</p>
     </div>
   </div>
   
@@ -2481,7 +2481,7 @@ Note
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>On Windows, <code>brm()</code> compiles Stan code and therefore requires an <a href="https://cran.r-project.org/bin/windows/Rtools/">Rtools version compatible with your installed R version</a>.</p>
+<p>On Windows, <code>brm()</code> compiles Stan code and requires an <a href="https://cran.r-project.org/bin/windows/Rtools/">Rtools version compatible with your installed R version</a>.</p>
 </div>
 </div>
 <div class="callout callout-style-default callout-important callout-titled">
@@ -4140,7 +4140,7 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>In the location–scale models by <code>brms</code>, dispersion parameters are modelled on the log standard deviation scale (<span class="math inline">\(\ln(\sigma)\)</span>). All coefficients for the scale component should therefore be interpreted as effects on the log standard deviation, not on the variance.</p>
+<p>In the location–scale models by <code>brms</code>, dispersion parameters are modelled on the log standard deviation scale (<span class="math inline">\(\ln(\sigma)\)</span>). All coefficients for the scale component should be interpreted as effects on the log standard deviation, not on the variance.</p>
 <section id="practical-guidance" class="level3">
 <h3 class="anchored" data-anchor-id="practical-guidance">Practical guidance</h3>
 <p>Models with random effects in the scale component, and especially models with correlated random effects across location and scale, require:</p>
@@ -4214,8 +4214,8 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 <span id="cb33-49"><a href="#cb33-49" aria-hidden="true" tabindex="-1"></a><span class="co"># Org.fertilizer.typeplant          -0.15      0.06    -0.27    -0.03 1.00     5617     4995</span></span>
 <span id="cb33-50"><a href="#cb33-50" aria-hidden="true" tabindex="-1"></a><span class="co"># sigma_Org.fertilizer.typeplant     0.17      0.09    -0.01     0.35 1.00     9838     4318</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>For lnRR, the location component indicated a negative average effect under animal-based fertilisers (<span class="math inline">\(\beta^{(l)}_{\text{animal}} = -0.26\)</span>, 95% credible interval CrI = [-0.38, -0.16]), implying that organic yields are, on average, lower than conventional yields under animal-based fertilisation. The contrast coefficient for fertiliser type was also negative (<span class="math inline">\(\beta^{(l)}_{\text{plant-animal}} = -0.15\)</span>, 95% CrI = [-0.27, -0.03]), indicating an additional yield penalty under plant-based fertilisers relative to animal-based fertilisers. On the response-ratio scale, these estimates correspond to an expected organic yield of <span class="math inline">\(\exp(\beta_0) = \exp(-0.26) \approx 0.77\)</span>, or about 23% lower than conventional yields, under animal-based fertilisers (the reference category). For plant-based fertilisers, the predicted response ratio is given by <span class="math inline">\(\exp(\!\beta_0 + \beta_{\text{plant-animal}}\!) = \exp(-0.26 - 0.15) \approx 0.66\)</span>, corresponding to organic yields that are approximately 34% lower than conventional yields.</p>
-<p>The scale component, modelled on the log-<span class="math inline">\(\sigma\)</span> scale, suggested a tendency towards greater residual heterogeneity under plant-based fertilisers (<span class="math inline">\(\beta^{(s)}_{\text{plant-animal}} = 0.17\)</span>, 95% CrI = [-0.01, 0.35]). This corresponds to an approximate 19% increase in residual heterogeneity for plant-based systems (<span class="math inline">\(\exp(0.17) - 1 \approx 0.19\)</span>), although the credible interval still overlapped zero, indicating moderate uncertainty in the magnitude of this effect.</p>
+<p>For lnRR, the location component indicated a negative average effect under animal-based fertilisers (<span class="math inline">\(\beta^{(l)}_{\text{animal}} = -0.26\)</span>, 95% credible interval CrI = [-0.38, -0.16]), implying that organic yields are, on average, lower than conventional yields under animal-based fertilisation. The contrast coefficient for fertiliser type was also negative (<span class="math inline">\(\beta^{(l)}_{\text{plant-animal}} = -0.15\)</span>, 95% CrI = [-0.27, -0.03]), indicating an additional yield penalty under plant-based fertilisers relative to animal-based fertilisers. On the response-ratio scale, these estimates correspond to an expected organic yield of <span class="math inline">\(\exp(\beta_0) = \exp(-0.26) \approx 0.77\)</span>, or about 23% lower than conventional yields, under animal-based fertilisers (the reference category). For plant-based fertilisers, the predicted response ratio is given by <span class="math inline">\(\exp(\!\beta_0 + \beta_{\text{plant-animal}}\!) = \exp(-0.26 - 0.15) \approx 0.66\)</span>, corresponding to organic yields that are approximately 34% lower than conventional yields. The scale intercept for the animal-based reference category was -1.30, which corresponds to a residual standard deviation of <span class="math inline">\(\exp(−1.30) \approx 0.27\)</span> on the lnRR effect-size scale. Importantly, this intercept describes residual heterogeneity among lnRR effect sizes and does not represent a direct organic-conventional difference in yield variability. The scale component, modelled on the log-<span class="math inline">\(\sigma\)</span> scale, suggested a tendency towards greater residual heterogeneity under plant-based fertilisers (<span class="math inline">\(\beta^{(s)}_{\text{plant-animal}} = 0.17\)</span>, 95% CrI = [-0.01, 0.35]).</p>
+<p>This corresponds to an approximate 19% increase in residual heterogeneity for plant-based systems (<span class="math inline">\(\exp(0.17) - 1 \approx 0.19\)</span>), although the credible interval still overlapped zero, indicating moderate uncertainty in the magnitude of this effect.</p>
 </section>
 <section id="lncvr-6" class="level4">
 <h4 class="anchored" data-anchor-id="lncvr-6">lnCVR</h4>
@@ -4366,7 +4366,7 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>In the location–scale models by <code>glmmTMB</code>, dispersion parameters are modelled on the log standard deviation scale (<span class="math inline">\(\ln(\sigma)\)</span>). All coefficients for the scale component should therefore be interpreted as effects on the log standard deviation, not on the variance.</p>
+<p>In the location–scale models by <code>glmmTMB</code>, dispersion parameters are modelled on the log standard deviation scale (<span class="math inline">\(\ln(\sigma)\)</span>). All coefficients for the scale component should be interpreted as effects on the log standard deviation, not on the variance.</p>
 </div>
 </div>
 <section id="a.-only-fixed-effects-in-scale-component-1" class="level3">
@@ -4561,7 +4561,7 @@ BLAS:   /System/Library/Frameworks/Accelerate.framework/Versions/A/Frameworks/ve
 LAPACK: /Library/Frameworks/R.framework/Versions/4.6/Resources/lib/libRlapack.dylib;  LAPACK version 3.12.1
 
 locale:
-[1] C.UTF-8/C.UTF-8/C.UTF-8/C/C.UTF-8/C.UTF-8
+[1] en_US.UTF-8/en_US.UTF-8/en_US.UTF-8/C/en_US.UTF-8/en_US.UTF-8
 
 time zone: America/Edmonton
 tzcode source: internal
@@ -4593,22 +4593,22 @@ loaded via a namespace (and not attached):
 [34] xtable_1.8-8          emmeans_2.0.3         scales_1.4.0         
 [37] MASS_7.3-65           cli_3.6.6             mvtnorm_1.4-1        
 [40] rmarkdown_2.31        reformulas_0.4.4      generics_0.1.4       
-[43] otel_0.2.0            RcppParallel_5.1.11-2 tzdb_0.5.0           
-[46] ggbeeswarm_0.7.3      minqa_1.2.8           rstan_2.32.7         
-[49] splines_4.6.0         bayesplot_1.15.0      parallel_4.6.0       
-[52] matrixStats_1.5.0     vctrs_0.7.3           boot_1.3-32          
-[55] sandwich_3.1-1        jsonlite_2.0.0        hms_1.1.4            
-[58] arrayhelpers_1.1-2    beeswarm_0.4.0        ggdist_3.3.3         
-[61] glue_1.8.1            nloptr_2.2.1          codetools_0.2-20     
-[64] distributional_0.8.1  stringi_1.8.9         gtable_0.3.6         
-[67] QuickJSR_1.10.0       lme4_2.0-6            pillar_1.11.1        
-[70] htmltools_0.5.9       Brobdingnag_1.2-9     R6_2.6.1             
-[73] TMB_1.9.21            Rdpack_2.6.6          rprojroot_2.1.1      
-[76] evaluate_1.0.5        lattice_0.22-9        rbibutils_2.4.1      
-[79] backports_1.5.1       rstantools_2.6.0      gridExtra_2.3.1      
-[82] coda_0.19-4.1         nlme_3.1-169          checkmate_2.3.4      
-[85] mgcv_1.9-4            xfun_0.60             zoo_1.8-15           
-[88] pkgconfig_2.0.3      </code></pre>
+[43] otel_0.2.0            RcppParallel_5.1.11-2 rstudioapi_0.19.0    
+[46] tzdb_0.5.0            ggbeeswarm_0.7.3      minqa_1.2.8          
+[49] rstan_2.32.7          splines_4.6.0         bayesplot_1.15.0     
+[52] parallel_4.6.0        matrixStats_1.5.0     vctrs_0.7.3          
+[55] boot_1.3-32           sandwich_3.1-1        jsonlite_2.0.0       
+[58] hms_1.1.4             arrayhelpers_1.1-2    beeswarm_0.4.0       
+[61] ggdist_3.3.3          glue_1.8.1            nloptr_2.2.1         
+[64] codetools_0.2-20      distributional_0.8.1  stringi_1.8.9        
+[67] gtable_0.3.6          QuickJSR_1.10.0       lme4_2.0-6           
+[70] pillar_1.11.1         htmltools_0.5.9       Brobdingnag_1.2-9    
+[73] R6_2.6.1              TMB_1.9.21            Rdpack_2.6.6         
+[76] rprojroot_2.1.1       evaluate_1.0.5        lattice_0.22-9       
+[79] rbibutils_2.4.1       backports_1.5.1       rstantools_2.6.0     
+[82] gridExtra_2.3.1       coda_0.19-4.1         nlme_3.1-169         
+[85] checkmate_2.3.4       mgcv_1.9-4            xfun_0.60            
+[88] zoo_1.8-15            pkgconfig_2.0.3      </code></pre>
 </div>
 </div>
 </section>

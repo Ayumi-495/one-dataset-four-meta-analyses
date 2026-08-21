@@ -112,7 +112,7 @@ pacman::p_load("brms", "glmmTMB", "metafor", "tidyverse",
 ```
 
 ::: callout-note
-On Windows, `brm()` compiles Stan code and therefore requires an [Rtools version compatible with your installed R version](https://cran.r-project.org/bin/windows/Rtools/).
+On Windows, `brm()` compiles Stan code and requires an [Rtools version compatible with your installed R version](https://cran.r-project.org/bin/windows/Rtools/).
 :::
 
 ::: callout-important
@@ -1982,7 +1982,7 @@ For other response distributions, the scale component may be parametrised differ
 
 ::: callout-note
 ### Keep in your mind…
-In the location–scale models by `brms`, dispersion parameters are modelled on the log standard deviation scale ($\ln(\sigma)$). All coefficients for the scale component should therefore be interpreted as effects on the log standard deviation, not on the variance.
+In the location–scale models by `brms`, dispersion parameters are modelled on the log standard deviation scale ($\ln(\sigma)$). All coefficients for the scale component should be interpreted as effects on the log standard deviation, not on the variance.
 
 ### Practical guidance
 
@@ -2080,8 +2080,10 @@ For lnRR, the location component indicated a negative average effect under anima
 The contrast coefficient for fertiliser type was also negative ($\beta^{(l)}_{\text{plant-animal}} = -0.15$, 95% CrI = [-0.27, -0.03]), indicating an additional yield penalty under plant-based fertilisers relative to animal-based fertilisers.
 On the response-ratio scale, these estimates correspond to an expected organic yield of $\exp(\beta_0) = \exp(-0.26) \approx 0.77$, or about 23% lower than conventional yields, under animal-based fertilisers (the reference category).
 For plant-based fertilisers, the predicted response ratio is given by $\exp(\!\beta_0 + \beta_{\text{plant-animal}}\!) = \exp(-0.26 - 0.15) \approx 0.66$, corresponding to organic yields that are approximately 34% lower than conventional yields.
-
+The scale intercept for the animal-based reference category was -1.30, which corresponds to a residual standard deviation of $\exp(−1.30) \approx 0.27$ on the lnRR effect-size scale. Importantly, this intercept describes residual heterogeneity among lnRR effect sizes and does not represent a direct organic-conventional difference in yield variability.
 The scale component, modelled on the log-$\sigma$ scale, suggested a tendency towards greater residual heterogeneity under plant-based fertilisers ($\beta^{(s)}_{\text{plant-animal}} = 0.17$, 95% CrI = [-0.01, 0.35]).
+
+
 This corresponds to an approximate 19% increase in residual heterogeneity for plant-based systems ($\exp(0.17) - 1 \approx 0.19$), although the credible interval still overlapped zero, indicating moderate uncertainty in the magnitude of this effect.
 
 #### lnCVR
@@ -2305,7 +2307,7 @@ Again, the same as `brms`, we focus on a location–scale meta-regression model 
 
 ::: callout-note
 ### Keep in your mind…
-In the location–scale models by `glmmTMB`, dispersion parameters are modelled on the log standard deviation scale ($\ln(\sigma)$). All coefficients for the scale component should therefore be interpreted as effects on the log standard deviation, not on the variance.
+In the location–scale models by `glmmTMB`, dispersion parameters are modelled on the log standard deviation scale ($\ln(\sigma)$). All coefficients for the scale component should be interpreted as effects on the log standard deviation, not on the variance.
 :::
 
 ### A. Only fixed effects in scale component
