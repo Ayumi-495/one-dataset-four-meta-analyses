@@ -2358,10 +2358,11 @@ window.Quarto = {
   <ul>
   <li><a href="#extending-the-locationscale-model" id="toc-extending-the-locationscale-model" class="nav-link" data-scroll-target="#extending-the-locationscale-model">Extending the location–scale model</a>
   <ul>
+  <li><a href="#random-slopes-heteroscedasticity-and-scale-models" id="toc-random-slopes-heteroscedasticity-and-scale-models" class="nav-link" data-scroll-target="#random-slopes-heteroscedasticity-and-scale-models">Random slopes, heteroscedasticity, and scale models</a></li>
   <li><a href="#from-one-scale-sub-model-to-two" id="toc-from-one-scale-sub-model-to-two" class="nav-link" data-scroll-target="#from-one-scale-sub-model-to-two">From one scale sub-model to two</a></li>
   <li><a href="#how-the-fertiliser-example-maps-to-this-model" id="toc-how-the-fertiliser-example-maps-to-this-model" class="nav-link" data-scroll-target="#how-the-fertiliser-example-maps-to-this-model">How the fertiliser example maps to this model</a></li>
-  <li><a href="#data-structure-and-two-fitting-routes" id="toc-data-structure-and-two-fitting-routes" class="nav-link" data-scroll-target="#data-structure-and-two-fitting-routes">Data structure and two fitting routes</a></li>
-  <li><a href="#reproducing-the-current-comparator" id="toc-reproducing-the-current-comparator" class="nav-link" data-scroll-target="#reproducing-the-current-comparator">Reproducing the current comparator</a></li>
+  <li><a href="#why-two-fitting-routes-are-needed" id="toc-why-two-fitting-routes-are-needed" class="nav-link" data-scroll-target="#why-two-fitting-routes-are-needed">Why two fitting routes are needed</a></li>
+  <li><a href="#current-model-as-a-comparator" id="toc-current-model-as-a-comparator" class="nav-link" data-scroll-target="#current-model-as-a-comparator">Current model as a comparator</a></li>
   <li><a href="#full-data-categorical-study-sd-models" id="toc-full-data-categorical-study-sd-models" class="nav-link" data-scroll-target="#full-data-categorical-study-sd-models">Full-data categorical study-SD models</a>
   <ul class="collapse">
   <li><a href="#study-level-metafor" id="toc-study-level-metafor" class="nav-link" data-scroll-target="#study-level-metafor"><code>metafor</code></a></li>
@@ -2369,9 +2370,9 @@ window.Quarto = {
   <li><a href="#study-level-brms" id="toc-study-level-brms" class="nav-link" data-scroll-target="#study-level-brms"><code>brms</code></a></li>
   </ul></li>
   <li><a href="#full-data-results" id="toc-full-data-results" class="nav-link" data-scroll-target="#full-data-results">Full-data results</a></li>
-  <li><a href="#supporting-consequence-prediction-for-a-genuinely-new-study" id="toc-supporting-consequence-prediction-for-a-genuinely-new-study" class="nav-link" data-scroll-target="#supporting-consequence-prediction-for-a-genuinely-new-study">Supporting consequence: prediction for a genuinely new study</a></li>
+  <li><a href="#how-both-levels-enter-prediction" id="toc-how-both-levels-enter-prediction" class="nav-link" data-scroll-target="#how-both-levels-enter-prediction">How both levels enter prediction</a></li>
   <li><a href="#matched-subset-direct-study-scale-analysis" id="toc-matched-subset-direct-study-scale-analysis" class="nav-link" data-scroll-target="#matched-subset-direct-study-scale-analysis">Matched-subset direct study-scale analysis</a></li>
-  <li><a href="#diagnostics-and-interpretation-boundary" id="toc-diagnostics-and-interpretation-boundary" class="nav-link" data-scroll-target="#diagnostics-and-interpretation-boundary">Diagnostics and interpretation boundary</a></li>
+  <li><a href="#model-checks-and-limitations" id="toc-model-checks-and-limitations" class="nav-link" data-scroll-target="#model-checks-and-limitations">Model checks and limitations</a></li>
   </ul></li>
   </ul></li>
   
@@ -4504,49 +4505,78 @@ Keep in your mind…
 </section>
 <section id="extension-where-does-heterogeneity-occur" class="level1">
 <h1>Extension: where does heterogeneity occur?</h1>
-<p>The models above allow fertiliser type to change the residual standard deviation among effect sizes within studies, while retaining one common study-level standard deviation. In a multilevel meta-analysis, however, heterogeneity can occur at both levels: studies can differ in their average effects, and effect sizes can vary around those study-level averages.</p>
-<p>This extension keeps the original four-analysis workflow and adds a second scale sub-model so that moderators can act separately on between-study and residual within-study heterogeneity. We apply it to lnRR and lnCVR using the same 318 effect sizes from 36 studies.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>If you only need the answer
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<ul>
-<li><strong>lnRR:</strong> context dependence occurred mainly between studies: study-level heterogeneity was greater under plant-based fertiliser, while the residual contrast was uncertain.</li>
-<li><strong>lnCVR:</strong> context dependence occurred mainly among effect sizes within studies: residual heterogeneity was greater under plant-based fertiliser, while the study-level contrast was unresolved.</li>
-</ul>
-<p>The sections below build the extended model from the notation used above, explain why results are reported as SD ratios, and show the fitting code, diagnostics, sensitivity analyses, and supporting new-study predictions.</p>
-</div>
-</div>
+<p>The location–scale models above allow fertiliser type to change the residual standard deviation among effect sizes within studies. They retain one study-level standard deviation, so they do not test whether the variation among study means also differs between fertiliser categories.</p>
+<p>Here we allow fertiliser type to affect both sources of heterogeneity. The distinction is useful because they describe different kinds of variation: between-study heterogeneity determines how much average effects differ among studies, whereas residual heterogeneity describes how much effect sizes differ around their study mean. The models are fitted to lnRR and lnCVR using the same 318 effect sizes from 36 studies.</p>
 <section id="extending-the-locationscale-model" class="level2">
 <h2 class="anchored" data-anchor-id="extending-the-locationscale-model">Extending the location–scale model</h2>
+<section id="random-slopes-heteroscedasticity-and-scale-models" class="level3">
+<h3 class="anchored" data-anchor-id="random-slopes-heteroscedasticity-and-scale-models">Random slopes, heteroscedasticity, and scale models</h3>
+<p>Random slopes, heteroscedastic random effects, and scale models can describe the same variance structure. Consider fertiliser category as a binary moderator, with animal (<span class="math inline">\(A\)</span>) and plant (<span class="math inline">\(P\)</span>) levels. A random-intercept model assigns every study the same among-study variance,</p>
+<p><span class="math display">\[
+y_{ij}=\beta_A I(g_{ij}=A)+\beta_P I(g_{ij}=P)+u_j+e_{ij}+m_{ij},
+\qquad u_j\sim\mathcal N(0,\sigma_u^2).
+\]</span></p>
+<p>The single random intercept <span class="math inline">\(u_j\)</span> shifts animal and plant effects in study <span class="math inline">\(j\)</span> by the same amount. Consequently, the model assumes the same between-study SD for both fertiliser categories.</p>
+<p>A categorical random-coefficient model instead gives each study a deviation for each category,</p>
+<p><span class="math display">\[
+y_{ij}=\beta_A I(g_{ij}=A)+\beta_P I(g_{ij}=P)
++u_{jA}I(g_{ij}=A)+u_{jP}I(g_{ij}=P)+e_{ij}+m_{ij},
+\]</span></p>
+<p><span class="math display">\[
+\begin{pmatrix}u_{jA}\\u_{jP}\end{pmatrix}
+\sim\mathcal N\!\left[
+\begin{pmatrix}0\\0\end{pmatrix},
+\begin{pmatrix}
+\sigma_{u,A}^2 &amp; \rho_u\sigma_{u,A}\sigma_{u,P}\\
+\rho_u\sigma_{u,A}\sigma_{u,P} &amp; \sigma_{u,P}^2
+\end{pmatrix}
+\right].
+\]</span></p>
+<p>This structure is a random-slope model because the effect of fertiliser can vary among studies. It is heteroscedastic because the between-study variance can differ between animal and plant fertilisers.</p>
+<p>With conventional intercept–slope coding, the study effect is <span class="math inline">\(u_{0j}\)</span> for animal fertiliser and <span class="math inline">\(u_{0j}+u_{1j}\)</span> for plant fertiliser. Therefore,</p>
+<p><span class="math display">\[
+\operatorname{Var}(u_{jA})=\operatorname{Var}(u_{0j}),\qquad
+\operatorname{Var}(u_{jP})=\operatorname{Var}(u_{0j}+u_{1j}).
+\]</span></p>
+<p>The variance of the random slope, <span class="math inline">\(\operatorname{Var}(u_{1j})\)</span>, is not the plant variance. Using <code>0 + fertilizer</code> gives one random coefficient per category and makes <span class="math inline">\(\sigma_{u,A}\)</span> and <span class="math inline">\(\sigma_{u,P}\)</span> directly visible.</p>
+<p>For a categorical moderator, the same two SDs can be written as a scale regression,</p>
+<p><span class="math display">\[
+\log(\sigma_{u,g})=\gamma_0+\gamma_1 I(g=P),
+\]</span></p>
+<p>so that <span class="math inline">\(\sigma_{u,A}=\exp(\gamma_0)\)</span> and <span class="math inline">\(\sigma_{u,P}=\exp(\gamma_0+\gamma_1)\)</span>. Estimating separate category variances and regressing the log SD on category are therefore two parameterisations of the same heteroscedasticity. The scale-regression form extends naturally to continuous moderators and to models with several predictors.</p>
+<table class="caption-top table">
+<thead><tr class="header"><th>Formulation</th><th>Between-study structure</th><th>Interpretation</th></tr></thead>
+<tbody>
+<tr class="odd"><td>Random intercept</td><td><code>(1 | study)</code></td><td>One study SD shared by all moderator values.</td></tr>
+<tr class="even"><td>Categorical random coefficients</td><td><code>(0 + fertilizer | study)</code></td><td>A study SD for each fertiliser category; their correlation may also be estimated.</td></tr>
+<tr class="odd"><td>Direct scale regression</td><td><code>sd(study) ~ fertilizer</code></td><td>Fertiliser predicts the log study SD.</td></tr>
+<tr class="even"><td>General scale regression</td><td><span class="math inline">\(\log(\sigma_{u,j})=\mathbf z_j^\mathsf T\boldsymbol\gamma\)</span></td><td>Continuous or multiple study-level moderators predict heterogeneity.</td></tr>
+</tbody>
+</table>
+<p>The same connection holds at the residual level: a dispersion formula such as <code>sigma ~ fertilizer</code> is a scale model for heteroscedasticity among effect sizes within studies.</p>
+</section>
 <section id="from-one-scale-sub-model-to-two" class="level3">
 <h3 class="anchored" data-anchor-id="from-one-scale-sub-model-to-two">From one scale sub-model to two</h3>
-<p>Using the notation introduced above, the location sub-model remains</p>
+<p>Using the notation introduced above, the location sub-model is</p>
 <p><span class="math display">\[
-y_i=\beta_0^{(l)}+\beta_1^{(l)}x_{1i}+\cdots+\beta_p^{(l)}x_{pi}
-  +u_{j[i]}^{(l)}+e_i^{(l)}+m_i,
+y_{ij}=\beta_0^{(l)}+\beta_1^{(l)}x_{1,ij}+\cdots+\beta_p^{(l)}x_{p,ij}
+  +u_j^{(l)}+e_{ij}^{(l)}+m_{ij},
 \]</span></p>
 <p>but the study and residual random effects now have their own scale sub-models:</p>
 <p><span class="math display">\[
 u_j^{(l)}\sim\mathcal N(0,\sigma_{u,j}^2),\qquad
-e_i^{(l)}\sim\mathcal N(0,\sigma_{e,i}^2),\qquad
-m_i\sim\mathcal N(0,v_i),
+e_{ij}^{(l)}\sim\mathcal N(0,\sigma_{e,ij}^2),\qquad
+m_{ij}\sim\mathcal N(0,v_{ij}),
 \]</span></p>
 <p><span class="math display">\[
 \ln(\sigma_{u,j})=
   \beta_0^{(s_u)}+\beta_1^{(s_u)}z_{1j}+\cdots+\beta_q^{(s_u)}z_{qj},
 \]</span></p>
 <p><span class="math display">\[
-\ln(\sigma_{e,i})=
-  \beta_0^{(s_e)}+\beta_1^{(s_e)}w_{1i}+\cdots+\beta_r^{(s_e)}w_{ri}.
+\ln(\sigma_{e,ij})=
+  \beta_0^{(s_e)}+\beta_1^{(s_e)}w_{1,ij}+\cdots+\beta_r^{(s_e)}w_{r,ij}.
 \]</span></p>
-<p>Here, <span class="math inline">\(\sigma_{u,j}\)</span> is the between-study SD and <span class="math inline">\(\sigma_{e,i}\)</span> is the residual within-study SD. The moderators in the location, between-study scale, and within-study scale sub-models need not be the same. A between-study moderator <span class="math inline">\(z_{qj}\)</span> must be constant within study, whereas an effect-size-level moderator <span class="math inline">\(w_{ri}\)</span> can vary within study. For correlated sampling errors, the scalar sampling term is replaced by <span class="math inline">\(\mathbf m\sim\mathcal N(\mathbf 0,\mathbf V)\)</span>, as in the fitted models below.</p>
+<p>Here, <span class="math inline">\(\sigma_{u,j}\)</span> is the between-study SD and <span class="math inline">\(\sigma_{e,ij}\)</span> is the residual within-study SD. The moderators in the location, between-study scale, and within-study scale sub-models need not be the same. A between-study moderator <span class="math inline">\(z_{qj}\)</span> must be constant within study, whereas an effect-size-level moderator <span class="math inline">\(w_{r,ij}\)</span> can vary within study. For correlated sampling errors, the scalar sampling term is replaced by <span class="math inline">\(\mathbf m\sim\mathcal N(\mathbf 0,\mathbf V)\)</span>, as in the fitted models below.</p>
 <p>The scale coefficients are expressed on the log-SD scale. With animal-based fertiliser as the reference category, exponentiating the plant-minus-animal scale contrast gives a ratio of SDs:</p>
 <p><span class="math display">\[
 R_u=\frac{\sigma_{u,P}}{\sigma_{u,A}}
@@ -4558,7 +4588,7 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 </section>
 <section id="how-the-fertiliser-example-maps-to-this-model" class="level3">
 <h3 class="anchored" data-anchor-id="how-the-fertiliser-example-maps-to-this-model">How the fertiliser example maps to this model</h3>
-<p>The full-data primary model represents fertiliser-specific study effects as categorical random coefficients,</p>
+<p>The full-data model uses one study random coefficient for each fertiliser category and sets their correlation to zero,</p>
 <p><span class="math display">\[
 \boldsymbol\Sigma_u=
 \begin{pmatrix}
@@ -4566,11 +4596,11 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 0&amp;\sigma_{u,P}^2
 \end{pmatrix}.
 \]</span></p>
-<p>This diagonal structure is deliberate: only six studies contain both fertiliser categories, so the correlation between their two study effects is weakly identified. The exploratory correlated model estimates a boundary correlation and is not used for interpretation.</p>
+<p>Only six studies contain both fertiliser categories, so there is little information with which to estimate <span class="math inline">\(\rho_u\)</span>. An unstructured model placed the estimated correlation at its boundary; we therefore use the diagonal structure above and interpret only the two category-specific SDs.</p>
 </section>
-<section id="data-structure-and-two-fitting-routes" class="level3">
-<h3 class="anchored" data-anchor-id="data-structure-and-two-fitting-routes">Data structure and two fitting routes</h3>
-<p>The full dataset contains 318 effects from 36 studies. Six studies contain both fertiliser categories, contributing 86 effects. This creates two related but not interchangeable fitting routes.</p>
+<section id="why-two-fitting-routes-are-needed" class="level3">
+<h3 class="anchored" data-anchor-id="why-two-fitting-routes-are-needed">Why two fitting routes are needed</h3>
+<p>The full dataset contains 318 effects from 36 studies. Six studies contain both fertiliser categories, contributing 86 effects. Mixed-category studies can be retained by the categorical random-coefficient model because each study can have both <span class="math inline">\(u_{jA}\)</span> and <span class="math inline">\(u_{jP}\)</span>. A direct study-scale regression assigns one SD predictor to each study, so its predictor must be constant within that study.</p>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 23%">
@@ -4606,11 +4636,11 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 \log(\sigma_{e,ij})=\alpha_0+\alpha_1 I(g_{ij}=P),\qquad
 \log(\sigma_{u,j})=\gamma_0+\gamma_1 I(g_j=P).
 \]</span></p>
-<p>The study-scale equation is invalid when fertiliser changes within a study. We therefore compare the direct model with a categorical model fitted to exactly the same 232-effect subset before comparing estimates across parameterisations.</p>
+<p>The direct model is therefore fitted to the 30 studies containing only one fertiliser category. To separate differences in parameterisation from differences in data, we also fit the categorical model to exactly this 232-effect subset.</p>
 </section>
-<section id="reproducing-the-current-comparator" class="level3">
-<h3 class="anchored" data-anchor-id="reproducing-the-current-comparator">Reproducing the current comparator</h3>
-<p>The current model has one common study SD and fertiliser-specific residual SDs. The deterministic <code>metafor</code> reproduction agrees with the current estimates within the pre-specified tolerance of 0.03 on the log scale.</p>
+<section id="current-model-as-a-comparator" class="level3">
+<h3 class="anchored" data-anchor-id="current-model-as-a-comparator">Current model as a comparator</h3>
+<p>The current model has one common study SD and fertiliser-specific residual SDs. The table shows the estimates reproduced with <code>metafor</code>.</p>
 <div class="cell" data-tbl-cap="Reproduction of the current model: common study SD and category-specific residual SD.">
 <details class="code-fold">
 <summary>Code</summary>
@@ -4709,11 +4739,11 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 </table>
 </div>
 </div>
-<p>The original index-based <code>brms</code> prior assignment fixed the wrong parameter rather than the known sampling-error multiplier. The Bayesian extension therefore uses the explicit <code>se(sqrt(vi), sigma = TRUE)</code> likelihood shown below.</p>
+<p>In <code>brms</code>, <code>se(sqrt(vi), sigma = TRUE)</code> treats the sampling SD as known while retaining a separate residual SD, <code>sigma</code>. This distinction is required when both sampling error and residual heterogeneity are present.</p>
 </section>
 <section id="full-data-categorical-study-sd-models" class="level3">
 <h3 class="anchored" data-anchor-id="full-data-categorical-study-sd-models">Full-data categorical study-SD models</h3>
-<p>The short calls below show the model grammar used for each implementation. The displayed result tables use compact analysis summaries embedded in this QMD so that the two-file tutorial remains self-contained.</p>
+<p>The following calls show equivalent implementations of the full-data categorical model.</p>
 <section id="study-level-metafor" class="level4">
 <h4 class="anchored" data-anchor-id="study-level-metafor"><code>metafor</code></h4>
 <p>The primary likelihood model uses diagonal animal- and plant-specific random-effect structures at both study and residual levels.</p>
@@ -4774,7 +4804,6 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 <span id="studyext-cb4-10"><a href="#studyext-cb4-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>Those scripts also record the seeds, priors, extraction guards, and cache handling used for the reported results.</p>
 </section>
 </section>
 <section id="full-data-results" class="level3">
@@ -4879,7 +4908,7 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 </table>
 </div>
 </div>
-<p>Posterior intervals determine whether each plant-to-animal ratio is resolved.</p>
+<p>The Bayesian model supplies uncertainty intervals for the plant-to-animal SD ratios.</p>
 <div class="cell" data-tbl-cap="Posterior plant-to-animal SD ratios under the primary and sensitivity priors.">
 <details class="code-fold">
 <summary>Code</summary>
@@ -5033,15 +5062,10 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="studyext-cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="studyext-cb8-1"><a href="#studyext-cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(old_par)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p>The results separate cleanly by outcome:</p>
-<ul>
-<li><strong>lnRR:</strong> plant study-level heterogeneity is greater, with <span class="math inline">\(R_u=2.18\)</span> (95% CrI 1.11–5.55), whereas the residual contrast is uncertain, <span class="math inline">\(R_e=1.14\)</span> (0.94–1.40).</li>
-<li><strong>lnCVR:</strong> plant residual heterogeneity is greater, with <span class="math inline">\(R_e=1.67\)</span> (1.18–2.34), whereas the study-level contrast is unresolved, <span class="math inline">\(R_u=1.05\)</span> (0.10–8.63).</li>
-</ul>
-<p>The planned prior sensitivity does not reverse either interpretation.</p>
+<p>For lnRR, the plant study SD was larger than the animal study SD: <span class="math inline">\(R_u=2.18\)</span> (95% CrI 1.11–5.55). The residual-SD ratio was less certain, <span class="math inline">\(R_e=1.14\)</span> (0.94–1.40). For lnCVR, the residual SD was larger under plant fertiliser, <span class="math inline">\(R_e=1.67\)</span> (1.18–2.34), whereas the study-SD ratio was estimated imprecisely, <span class="math inline">\(R_u=1.05\)</span> (0.10–8.63). Changing the prior on the study SD did not alter these interpretations.</p>
 </section>
-<section id="supporting-consequence-prediction-for-a-genuinely-new-study" class="level3">
-<h3 class="anchored" data-anchor-id="supporting-consequence-prediction-for-a-genuinely-new-study">Supporting consequence: prediction for a genuinely new study</h3>
+<section id="how-both-levels-enter-prediction" class="level3">
+<h3 class="anchored" data-anchor-id="how-both-levels-enter-prediction">How both levels enter prediction</h3>
 <p>For a new study in category <span class="math inline">\(g\)</span>, the latent effect has predictive variance</p>
 <p><span class="math display">\[
 \operatorname{Var}(y_{\mathrm{latent,new},g})=
@@ -5058,7 +5082,7 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 \sigma_{u,g}^2+\frac{\sigma_{e,g}^2}{k}+
 \frac{\mathbf 1^\top\mathbf V_{\mathrm{new}}\mathbf 1}{k^2}.
 \]</span></p>
-<p>Increasing <span class="math inline">\(k\)</span> averages down residual and sampling variation, but it does not average away the study-level component. The prediction intervals below integrate posterior uncertainty in the fixed effects and variance parameters; they are not plug-in intervals.</p>
+<p>Increasing <span class="math inline">\(k\)</span> averages down residual and sampling variation, but it does not average away the study-level component. The intervals below include posterior uncertainty in the means and variance components.</p>
 <div class="cell" data-tbl-cap="Latent and observed new-effect prediction intervals at category-specific median sampling variance.">
 <details class="code-fold">
 <summary>Code</summary>
@@ -5349,7 +5373,7 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 </section>
 <section id="matched-subset-direct-study-scale-analysis" class="level3">
 <h3 class="anchored" data-anchor-id="matched-subset-direct-study-scale-analysis">Matched-subset direct study-scale analysis</h3>
-<p>The direct <code>drmTMB</code> model places fertiliser predictors on both the residual and study SDs. It is fitted only to the 30 studies in which fertiliser category is constant.</p>
+<p>The direct <code>drmTMB</code> model places fertiliser predictors on both the residual and study SDs. It uses the 30 studies in which fertiliser category is constant.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -5365,7 +5389,7 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 <span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-<p><code>blsmeta</code> fits the same matched-subset idea as a three-level Bayesian model, with <code>mods_scale2</code> for the residual SD and <code>mods_scale3</code> for the study SD. Version 0.1.0 requires the level-three design rows to align with the numeric study indices, so the data are sorted and the identity is checked before fitting.</p>
+<p><code>blsmeta</code> fits the same matched-subset model in a Bayesian framework, using <code>mods_scale2</code> for the residual SD and <code>mods_scale3</code> for the study SD. The observations are sorted by study before creating the numeric study index required by the model.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
@@ -5390,8 +5414,7 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 <span id="studyext-cb12-19"><a href="#studyext-cb12-19" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="studyext-cb12-20"><a href="#studyext-cb12-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="studyext-cb12-21"><a href="#studyext-cb12-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Repeat with yi = lnCVR and vi = var.lnCVR.</span></span>
-<span id="studyext-cb12-22"><a href="#studyext-cb12-22" aria-hidden="true" tabindex="-1"></a><span class="co"># blsmeta 0.1.0 returns its requested warm-up draws; the companion script</span></span>
-<span id="studyext-cb12-23"><a href="#studyext-cb12-23" aria-hidden="true" tabindex="-1"></a><span class="co"># removes them explicitly before summaries and diagnostics.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="studyext-cb12-22"><a href="#studyext-cb12-22" aria-hidden="true" tabindex="-1"></a></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 <p>The frequentist matched-subset categorical bridge and direct model use exactly the same 232 effects, although <code>metafor</code> uses REML and <code>drmTMB</code> uses ML. They agree that the lnRR study SD is greater for plant fertiliser. For lnCVR, these two frequentist fits place the plant study SD near zero, but the direct fit is on a weakly identified boundary; that result is not evidence of zero plant study heterogeneity.</p>
@@ -5570,24 +5593,10 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 </table>
 </div>
 </div>
-<p><code>blsmeta</code> 0.1.0 was present in an older R 4.4 library and was reinstalled under the active R 4.6 environment. After correcting and guarding the study-order alignment, its lnRR study-SD ratio agreed in direction with the other estimators, but the broader parameter chain failed the convergence gate. For lnCVR, the study-SD interval remained very wide and the derived study-ratio chain also missed the strict target threshold. The <code>blsmeta</code> rows are therefore diagnostic sensitivities, not claim-bearing estimates.</p>
-<p>The code above records the corresponding <code>drmTMB</code> and <code>blsmeta</code> model specifications.</p>
-<div class="callout callout-style-default callout-note callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Note</span>Analysis environment
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The original tutorial HTML reports its earlier render environment (R 4.5.2). The new study-level fits were run under R 4.6.0 with <code>metafor</code> 5.0.1, <code>glmmTMB</code> 1.1.14, <code>brms</code> 2.23.0, <code>drmTMB</code> 0.7.0, and <code>blsmeta</code> 0.1.0.</p>
-</div>
-</div>
+<p>The matched-subset estimates support the larger plant study SD for lnRR. For lnCVR, the frequentist study-SD estimates lie near a boundary and the Bayesian interval is wide. The <code>blsmeta</code> chains did not meet the convergence criteria for all study-scale parameters, so these estimates are included only as a sensitivity analysis.</p>
 </section>
-<section id="diagnostics-and-interpretation-boundary" class="level3">
-<h3 class="anchored" data-anchor-id="diagnostics-and-interpretation-boundary">Diagnostics and interpretation boundary</h3>
+<section id="model-checks-and-limitations" class="level3">
+<h3 class="anchored" data-anchor-id="model-checks-and-limitations">Model checks and limitations</h3>
 <div class="cell" data-tbl-cap="Concise fit diagnostics for the study-level extension.">
 <details class="code-fold">
 <summary>Code</summary>
@@ -5829,14 +5838,13 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 </div>
 </div>
 <ul>
-<li>The primary Bayesian fits have <span class="math inline">\(\widehat R\leq1.01\)</span>, adequate bulk and tail effective sample sizes, and no unresolved divergences.</li>
+<li>The full-data Bayesian fits have <span class="math inline">\(\widehat R\leq1.01\)</span>, adequate bulk and tail effective sample sizes, and no unresolved divergences.</li>
 <li><code>metafor</code> and <code>glmmTMB</code> agree on the primary frequentist point estimates.</li>
 <li>The exploratory animal–plant study correlation is at the boundary and is not interpreted.</li>
-<li>The lnCVR direct matched-subset study SD is weakly identified; a positive-definite Hessian does not remove that limitation.</li>
-<li>The corrected <code>blsmeta</code> fits ran, but their study-ratio target diagnostics did not fully pass; they are reported for transparency and do not replace the full-data models.</li>
+<li>The lnCVR study SD is weakly identified in the matched subset.</li>
+<li>The <code>blsmeta</code> study-scale estimates are not interpreted because their convergence criteria were not met.</li>
 </ul>
-<p>The scientific conclusion is therefore level-specific. For lnRR, the evidence supports greater plant study-level heterogeneity and hence poorer transferability of the study-level mean, with a wide interval and the diagonal covariance assumption stated explicitly. For lnCVR, the evidence supports greater plant residual heterogeneity, but not a difference in transferability of the study-level mean; individual-effect predictions are wider under plant fertiliser.</p>
-<p>The embedded summaries keep the tutorial self-contained while retaining the model estimates and diagnostics used in the displayed tables.</p>
+<p>For lnRR, the evidence supports greater plant study-level heterogeneity and hence poorer transferability of the study-level mean, with a wide interval and the diagonal covariance assumption stated explicitly. For lnCVR, the evidence supports greater plant residual heterogeneity, but not a difference in transferability of the study-level mean; individual-effect predictions are wider under plant fertiliser.</p>
 </section>
 </section>
 </section>
