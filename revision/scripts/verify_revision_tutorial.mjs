@@ -46,7 +46,7 @@ function checkSource() {
     "observed new comparison",
     "mean of $k$ new comparisons",
     "does not by itself establish poorer transferability",
-    "blsmeta` is an optional Bayesian comparator"
+    "blsmeta` is a direct Bayesian study-scale implementation"
   ];
   for (const text of required) assert(qmd.includes(text), `missing required source text: ${text}`);
   const cvrStarts = [...qmd.matchAll(/escalc\(measure\s*=\s*"CVR"/g)].map((match) => match.index);
@@ -59,10 +59,50 @@ function checkSource() {
   console.log("source verification passed");
 }
 
+function checkInstructional() {
+  const qmd = readFileSync(qmdPath, "utf8");
+  const required = [
+    "## Starting comparator: residual location--scale model",
+    "## General multilevel location--scale model",
+    "## Categorical random coefficients are a location--scale special case",
+    "## Primary full-data categorical model",
+    "study-level-metafor-code",
+    "study-level-glmmtmb-code",
+    "study-level-brms-code",
+    "study-level-drmtmb-code",
+    "study-level-blsmeta-code",
+    "study-level-prior-sensitivity",
+    "## Matched-subset direct study-scale bridge",
+    "Only six studies contain both fertiliser categories",
+    "exp(\\gamma_1/2)",
+    "\\operatorname{Var}(u_{jP})",
+    "\\mathbf1^\\mathsf{T}\\mathbf V_{\\mathrm{new}}\\mathbf1",
+    "predeclared convergence criteria"
+  ];
+  for (const text of required) assert(qmd.includes(text), `missing instructional material: ${text}`);
+  console.log("instructional verification passed");
+}
+
+function checkTechnical() {
+  const qmd = readFileSync(qmdPath, "utf8");
+  const script = readFileSync(scriptPath, "utf8");
+  for (const text of [
+    "residual_animal <- exp(draws[[draw_column(draws, \"^b_sigma_fertilizeranimal$\")]])",
+    "residual_plant <- exp(draws[[draw_column(draws, \"^b_sigma_fertilizerplant$\")]])",
+    "median_response_by_fertilizer",
+    "boundary = c(boundary, FALSE)"
+  ]) assert(script.includes(text), `missing technical correction: ${text}`);
+  assert(qmd.includes("separate median sampling variance\nfor each response-by-fertiliser category"),
+    "tutorial does not describe response-by-fertiliser sampling-variance scenarios");
+  assert(qmd.includes("must be exponentiated before forming SD draws or prediction intervals"),
+    "tutorial does not explain the brms log-SD conversion");
+  console.log("technical verification passed");
+}
+
 function checkPipeline() {
   assert(existsSync(scriptPath), "study-level pipeline script is missing");
   const script = readFileSync(scriptPath, "utf8");
-  for (const text of ["measure = \"CVR\"", "correct = TRUE", "fit_brms_category_model", "fit_metafor_category_model", "saveRDS"]) {
+  for (const text of ["measure = \"CVR\"", "correct = TRUE", "fit_brms_category_model", "fit_metafor_category_model", "fit_glmmtmb_category_model", "fit_drmtmb_direct_model", "run_blsmeta_sensitivity", "saveRDS"]) {
     assert(script.includes(text), `pipeline does not contain ${text}`);
   }
   assert(existsSync(artifactPath), "regenerated study-level artifact is missing");
@@ -82,7 +122,7 @@ function checkRendered() {
   assert(statSync(htmlPath).mtimeMs >= statSync(qmdPath).mtimeMs,
     "revision/index.html is older than revision/tutorial.qmd");
   const html = readFileSync(htmlPath, "utf8");
-  for (const text of ["Where does heterogeneity occur?", "Posterior plant-to-animal SD ratios", "2.18", "1.15", "1.67"]) {
+  for (const text of ["Where does heterogeneity occur?", "General multilevel location", "Categorical random coefficients", "blsmeta", "Posterior plant-to-animal SD ratios", "2.18", "1.67"]) {
     assert(html.includes(text), `rendered tutorial is missing ${text}`);
   }
   for (const forbidden of ["lower stability", "strongly governs the predictability", "stability gap"]) {
@@ -91,7 +131,7 @@ function checkRendered() {
   console.log("rendered verification passed");
 }
 
-const checks = { scope: checkScope, source: checkSource, pipeline: checkPipeline, rendered: checkRendered };
+const checks = { scope: checkScope, source: checkSource, instructional: checkInstructional, technical: checkTechnical, pipeline: checkPipeline, rendered: checkRendered };
 const selected = process.argv[2];
 if (!checks[selected]) fail(`choose one of: ${Object.keys(checks).join(", ")}`);
 checks[selected]();

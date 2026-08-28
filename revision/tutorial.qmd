@@ -2598,14 +2598,90 @@ matched_data <- study_level_artifacts$matched_data
 format_ratio <- function(response_name, component_name) {
   row <- study_level_ratios[
     study_level_ratios$response == response_name &
-      study_level_ratios$component == component_name,
+      study_level_ratios$component == component_name &
+      study_level_ratios$model == "extended_primary",
     ]
   stopifnot(nrow(row) == 1L)
   sprintf("%.2f [%.2f, %.2f]", row$estimate, row$lower, row$upper)
 }
 ```
 
-## Primary full-data model
+## Starting comparator: residual location--scale model
+
+The residual location--scale model is the useful starting comparator.  It
+allows fertiliser category to change the residual SD among effect sizes within
+studies, while retaining one common SD for the distribution of study means:
+
+$$
+y_{ij}=\mu_{g[ij]}+u_j+e_{ij}+m_{ij},\qquad
+u_j\sim\mathcal N(0,\tau^2),\quad
+e_{ij}\sim\mathcal N(0,\sigma_{g[ij]}^2),\quad
+m_{ij}\sim\mathcal N(0,v_{ij}).
+$$
+
+Here $\tau$ is between-study heterogeneity and $\sigma_g$ is residual
+within-study heterogeneity.  A category difference in $\sigma_g$ is therefore
+not, by itself, a difference in transferability to a new study.  The original
+residual model is available in `metafor`, `glmmTMB`, and `brms` through a
+category-specific random-effect or dispersion/residual-scale component.
+
+## General multilevel location--scale model
+
+For the extension, the two variance components receive separate scale
+sub-models:
+
+$$
+\begin{aligned}
+y_{ij} &= \mathbf{x}_{ij}^{\mathsf T}\boldsymbol\beta+u_j+e_{ij}+m_{ij},\\
+u_j &\sim \mathcal N(0,\tau_j^2),\qquad
+e_{ij}\sim\mathcal N(0,\sigma_{ij}^2),\qquad
+\mathbf m\sim\mathcal N(\mathbf0,\mathbf V),\\
+\log(\tau_j) &= \mathbf z_j^{\mathsf T}\boldsymbol\gamma_u,\qquad
+\log(\sigma_{ij})=\mathbf w_{ij}^{\mathsf T}\boldsymbol\gamma_e.
+\end{aligned}
+$$
+
+The location, study-scale, and residual-scale moderators need not be the same.
+A study-scale predictor must be constant within study; a residual-scale
+predictor may vary among effect sizes.  With correlated sampling errors, the
+scalar $v_{ij}$ is replaced by the sampling covariance matrix $\mathbf V$.
+
+## Categorical random coefficients are a location--scale special case
+
+For animal ($A$) and plant ($P$) fertiliser, category-specific study random
+coefficients can be written as
+
+$$
+y_{ij}=\beta_A I(g_{ij}=A)+\beta_P I(g_{ij}=P)
++u_{jA}I(g_{ij}=A)+u_{jP}I(g_{ij}=P)+e_{ij}+m_{ij},
+$$
+
+with $\operatorname{SD}(u_{jA})=\tau_A$ and
+$\operatorname{SD}(u_{jP})=\tau_P$.  This is both a categorical random-slope
+model and a heteroscedastic random-effects model.  Its diagonal version is
+equivalent to the categorical scale regression
+
+$$
+\log(\tau_g)=\gamma_0+\gamma_1I(g=P),
+$$
+
+so that $\tau_A=\exp(\gamma_0)$ and
+$\tau_P=\exp(\gamma_0+\gamma_1)$.  Direct scale regression is more general:
+it readily accommodates continuous predictors or several predictors in a
+scale sub-model.
+
+Under conventional intercept--slope coding, in contrast, the animal study
+effect is $u_{0j}$ and the plant study effect is $u_{0j}+u_{1j}$.  Thus
+
+$$
+\operatorname{Var}(u_{jP})=\operatorname{Var}(u_{0j})+
+\operatorname{Var}(u_{1j})+2\operatorname{Cov}(u_{0j},u_{1j}),
+$$
+
+so the random-slope variance alone is **not** the plant-category variance.
+Using `0 + fertilizer` makes the two category-specific SDs directly visible.
+
+## Primary full-data categorical model
 
 For each response $y_i$ (lnRR or lnCVR), the primary model uses category-specific study and residual SDs:
 
@@ -2613,17 +2689,85 @@ $$y_i \sim \mathcal{N}(\mu_{c[i]},\; v_i + \tau_{c[i]}^2 + \sigma_{c[i]}^2),$$
 
 where $v_i$ is the known sampling variance, $\tau_c$ is the study-level SD, and $\sigma_c$ is the residual SD for fertiliser category $c$. The covariance between animal and plant study effects is fixed at zero (a diagonal study covariance). This is a stated modelling restriction, not evidence that the correlation is zero.
 
-This is a categorical random-coefficient model: in `brms` the study term is written `(0 + fertilizer || study_ID)`. It estimates a separate category-specific study SD rather than treating the plant random-slope variance as the plant-category variance. Under an intercept-plus-slope representation, the animal study variance is $\operatorname{Var}(u_0)$, whereas the plant study variance is $\operatorname{Var}(u_0 + u_1)=\operatorname{Var}(u_0)+\operatorname{Var}(u_1)+2\operatorname{Cov}(u_0,u_1)$. Thus $\operatorname{Var}(u_1)$ alone is not the plant-category variance. Estimating the animal--plant study correlation would require information from studies contributing both categories; only six such studies are present here, so that correlation is weakly identified and is not interpreted.
+This is a categorical random-coefficient model: in `brms` the study term is written `(0 + fertilizer || study_ID)`.  The covariance between category-specific study effects is fixed to zero.  Estimating their correlation would require the six mixed-category studies to carry substantially more information than they do here; the unstructured fit is boundary-prone and is not interpreted.
 
 The reproducible script [`R/study_level_heterogeneity.R`](R/study_level_heterogeneity.R) recalculates lnCVR with `correct = TRUE`, fits the full-data Bayesian model with `brms`, builds posterior ratio and prediction tables, and saves the artifact read above. It deliberately does not download or silently create inputs during rendering.
 
+### Full-data categorical analyses in three packages
+
+The principal calls remain visible here; the accompanying script supplies the
+complete data preparation, fit checks, and artifact-writing route.  All use
+the full 318 effects from 36 studies.  `metafor` and `glmmTMB` provide
+frequentist point-estimate checks, while `brms` provides posterior intervals
+and predictions.
+
+```{r}
+#| label: study-level-metafor-code
+#| eval: false
+#| code-fold: true
+
+metafor::rma.mv(
+  yi = data[[response]], V = data[[variance]], mods = ~ 0 + fertilizer,
+  random = list(~ fertilizer | study_ID, ~ fertilizer | effect_size_ID),
+  struct = c("DIAG", "DIAG"), test = "t", method = "REML", data = data
+)
+
+# Exploratory only: use "UN" for the first structure to estimate the
+# animal--plant study-effect correlation.  With only six mixed studies this
+# correlation is boundary-prone and is not interpreted.
+```
+
+```{r}
+#| label: study-level-glmmtmb-code
+#| eval: false
+#| code-fold: true
+
+model_data <- transform(
+  data,
+  study_ID = factor(study_ID),
+  effect_size_ID = factor(effect_size_ID),
+  g = factor("known_sampling")
+)
+V <- diag(model_data[[variance]])
+dimnames(V) <- list(levels(model_data$effect_size_ID), levels(model_data$effect_size_ID))
+
+glmmTMB::glmmTMB(
+  response ~ 0 + fertilizer +
+    diag(0 + fertilizer | study_ID) +
+    equalto(0 + effect_size_ID | g, V),
+  dispformula = ~ 0 + fertilizer,
+  REML = TRUE, data = model_data
+)
+```
+
+```{r}
+#| label: study-level-brms-code
+#| eval: false
+#| code-fold: true
+
+brms::brm(
+  brms::bf(
+    y | se(sqrt(vi), sigma = TRUE) ~
+      0 + fertilizer + (0 + fertilizer || study_ID),
+    sigma ~ 0 + fertilizer
+  ),
+  family = gaussian(), prior = historical_primary_spec$priors,
+  chains = 4, iter = 2000, warmup = 1000, seed = 20260937,
+  backend = "cmdstanr", control = list(adapt_delta = 0.99), data = data
+)
+```
+
+The `brms` residual-scale coefficients (`b_sigma_*`) are on the log-SD scale.
+They must be exponentiated before forming SD draws or prediction intervals.
+
 ```{r}
 #| label: study-level-ratios
-#| tbl-cap: "Posterior plant-to-animal SD ratios from the full-data primary model."
+#| tbl-cap: "Posterior plant-to-animal SD ratios from the full-data primary and prespecified prior-sensitivity models."
 
 knitr::kable(
   transform(
-    study_level_ratios[, c("response", "component", "estimate", "lower", "upper")],
+    study_level_ratios[, c("response", "model", "component", "estimate", "lower", "upper")],
+    model = ifelse(model == "extended_primary", "primary Exp(2)", "sensitivity Exp(1)"),
     estimate = round(estimate, 2), lower = round(lower, 2), upper = round(upper, 2)
   ),
   row.names = FALSE
@@ -2632,21 +2776,59 @@ knitr::kable(
 
 For lnRR, the posterior study-SD ratio is `r format_ratio("lnRR", "study_sd_ratio")`, while the residual-SD ratio is `r format_ratio("lnRR", "residual_sd_ratio")`. For lnCVR, the corresponding ratios are `r format_ratio("lnCVR", "study_sd_ratio")` and `r format_ratio("lnCVR", "residual_sd_ratio")`. Thus, a comparison-specific residual-scale difference should not be relabelled as a study-level transferability difference.
 
+For a log-SD coefficient $\gamma_1$, the plant-to-animal ratio is
+$\exp(\gamma_1)$.  Some software instead models log variance,
+$\log(\sigma^2)$; for a coefficient on that scale the corresponding SD ratio
+is $\exp(\gamma_1/2)$.  This scale distinction is essential when comparing
+parameterisations across packages.
+
+```{r}
+#| label: study-level-prior-sensitivity
+#| eval: false
+#| code-fold: true
+
+# Prespecified sensitivity: change only the study-SD prior from Exp(2) to
+# Exp(1), refit, and compare posterior ratios plus R-hat/ESS/divergences.
+study_sd_prior_sensitivity_spec <- historical_primary_spec
+study_sd_prior_sensitivity_spec$priors <- c(
+  brms::set_prior("normal(0, 1)", class = "b"),
+  brms::set_prior("normal(-1, 1)", class = "b", dpar = "sigma"),
+  brms::set_prior("exponential(1)", class = "sd", group = "study_ID")
+)
+```
+
+The sensitivity is deliberately prespecified and changes no likelihood,
+sampling-error treatment, data, or parameterisation.  It assesses prior
+influence on the weakly identified study-scale contrast rather than selecting
+a prior to reproduce a desired interval.
+
 ## Prediction targets
 
-For an observed new comparison, the predictive variance includes all three sources of variation,
+For a latent new comparison, the predictive variance includes the two
+heterogeneity components,
+
+$$\tau_c^2+\sigma_c^2.$$
+
+For an observed new comparison, it also includes sampling variation,
 
 $$\tau_c^2 + \sigma_c^2 + v_i.$$
 
 For the mean of $k$ new comparisons from one new study, residual and sampling terms are averaged but the study term is not:
 
-$$\tau_c^2 + \sigma_c^2/k + \bar v/k.$$
+$$
+\tau_c^2+\frac{\sigma_c^2}{k}+
+\frac{\mathbf1^\mathsf{T}\mathbf V_{\mathrm{new}}\mathbf1}{k^2}.
+$$
 
-The script evaluates these targets at the median sampling variance in each response and category. Therefore, they are explicit prediction scenarios, not generic claims about every future data set.
+For independent equal-variance comparisons, the final term reduces to $v/k$.
+The script evaluates these scenarios at a **separate median sampling variance
+for each response-by-fertiliser category**, rather than one median pooled over
+fertiliser categories.  They are explicit prediction scenarios, not generic
+claims about every future data set.
 
 ```{r}
 #| label: study-level-predictions
-#| tbl-cap: "Posterior prediction scenarios at the median sampling variance."
+#| tbl-cap: "Posterior prediction scenarios at category-specific median sampling variance."
 
 knitr::kable(
   transform(
@@ -2657,7 +2839,7 @@ knitr::kable(
 )
 ```
 
-## Full, direct, and bridge comparisons
+## Matched-subset direct study-scale bridge
 
 The following comparison separates changes due to data restriction from changes due to model parameterisation.
 
@@ -2685,6 +2867,7 @@ When applied to the same matched data scope and when fertiliser category is cons
 ```{r}
 #| label: study-level-drmtmb-code
 #| eval: false
+#| code-fold: true
 
 # The script fits this exact model for lnRR, then repeats it for lnCVR.
 matched_lnRR <- transform(matched_data, response = lnRR, V = var.lnRR)
@@ -2701,7 +2884,41 @@ matched_lnCVR <- transform(matched_data, response = lnCVR, V = var.lnCVR)
 # Replace `matched_lnRR` above with `matched_lnCVR` to fit the lnCVR version.
 ```
 
-`blsmeta` is an optional Bayesian comparator, not a required dependency of the rendered tutorial. If it is installed, fit it only to the matched subset and assess sampler diagnostics before interpreting any study-scale estimate; the present reproducible primary results do not rely on it.
+`blsmeta` is a direct Bayesian study-scale implementation.  It is intentionally
+kept as an optional sensitivity route: it must use the matched subset, with
+observations sorted by study and a freshly created numeric study index.  The
+fit must not be interpreted unless its convergence checks pass.
+
+```{r}
+#| label: study-level-blsmeta-code
+#| eval: false
+#| code-fold: true
+
+matched_blsmeta <- matched_data[order(matched_data$study_ID,
+                                      matched_data$effect_size_ID), ]
+matched_blsmeta$es_blsmeta <- seq_len(nrow(matched_blsmeta))
+matched_blsmeta$study_blsmeta <- blsmeta::make_study_id(matched_blsmeta$study_ID)
+
+blsmeta::blsmeta(
+  yi = lnRR, vi = var.lnRR,
+  es_id = es_blsmeta, study_id = study_blsmeta,
+  mods = ~ fertilizer,
+  mods_scale2 = ~ 0 + fertilizer,  # residual log SD
+  mods_scale3 = ~ 0 + fertilizer,  # study log SD
+  iter = 20000, warmup = 5000, chains = 4,
+  data = matched_blsmeta
+)
+
+# Repeat with yi = lnCVR and vi = var.lnCVR, then check split-R-hat and ESS
+# after warmup before reporting exp(eta[2] - eta[1]) as the study-SD ratio.
+```
+
+`blsmeta` convergence problems are reported as a diagnostic finding, not
+silently discarded: the previously attempted matched-subset chains failed the
+predeclared convergence criteria.  Its estimates are therefore sensitivity
+results only, and neither support nor contradict the primary full-data `brms`
+inference.  The primary rendered results do not depend on `blsmeta` being
+installed.
 
 ## Diagnostics and interpretation
 
@@ -2719,6 +2936,19 @@ knitr::kable(
 ```
 
 The full-data lnRR model addresses study-level variation directly. In contrast, the stronger lnCVR residual-scale contrast describes wider variability among comparisons within the represented studies. It supports a conditional statement about within-study consistency, not an unconditional claim about transferability to new studies. The analysis does not establish a causal mechanism for either component.
+
+The primary Bayesian fits must have $\widehat R\leq1.01$, adequate effective
+sample sizes, and no unresolved divergences.  The prior-sensitivity fits are
+checked by the same criteria.  `metafor` and `glmmTMB` provide frequentist
+cross-checks for the categorical likelihood; they need not agree exactly with
+the Bayesian posterior summaries or with each other on the matched subset
+because they differ in estimator (REML versus ML) and parameterisation.
+
+Only six studies contain both fertiliser categories.  Consequently, the
+animal--plant study-effect correlation is weakly identified, unstructured
+covariance models are boundary-prone, and the lnCVR study-scale contrast has
+wide uncertainty.  These are limitations of the information in the data, not
+evidence for a zero SD or a category-specific causal mechanism.
 
 # Software and package versions
 

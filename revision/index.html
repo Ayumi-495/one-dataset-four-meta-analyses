@@ -2385,9 +2385,15 @@ window.Quarto = {
   </ul></li>
   <li><a href="#extension-where-does-heterogeneity-occur" id="toc-extension-where-does-heterogeneity-occur" class="nav-link" data-scroll-target="#extension-where-does-heterogeneity-occur">Extension: Where does heterogeneity occur?</a>
   <ul>
-  <li><a href="#primary-full-data-model" id="toc-primary-full-data-model" class="nav-link" data-scroll-target="#primary-full-data-model">Primary full-data model</a></li>
+  <li><a href="#starting-comparator-residual-locationscale-model" id="toc-starting-comparator-residual-locationscale-model" class="nav-link" data-scroll-target="#starting-comparator-residual-locationscale-model">Starting comparator: residual location–scale model</a></li>
+  <li><a href="#general-multilevel-locationscale-model" id="toc-general-multilevel-locationscale-model" class="nav-link" data-scroll-target="#general-multilevel-locationscale-model">General multilevel location–scale model</a></li>
+  <li><a href="#categorical-random-coefficients-are-a-locationscale-special-case" id="toc-categorical-random-coefficients-are-a-locationscale-special-case" class="nav-link" data-scroll-target="#categorical-random-coefficients-are-a-locationscale-special-case">Categorical random coefficients are a location–scale special case</a></li>
+  <li><a href="#primary-full-data-categorical-model" id="toc-primary-full-data-categorical-model" class="nav-link" data-scroll-target="#primary-full-data-categorical-model">Primary full-data categorical model</a>
+  <ul>
+  <li><a href="#full-data-categorical-analyses-in-three-packages" id="toc-full-data-categorical-analyses-in-three-packages" class="nav-link" data-scroll-target="#full-data-categorical-analyses-in-three-packages">Full-data categorical analyses in three packages</a></li>
+  </ul></li>
   <li><a href="#prediction-targets" id="toc-prediction-targets" class="nav-link" data-scroll-target="#prediction-targets">Prediction targets</a></li>
-  <li><a href="#full-direct-and-bridge-comparisons" id="toc-full-direct-and-bridge-comparisons" class="nav-link" data-scroll-target="#full-direct-and-bridge-comparisons">Full, direct, and bridge comparisons</a></li>
+  <li><a href="#matched-subset-direct-study-scale-bridge" id="toc-matched-subset-direct-study-scale-bridge" class="nav-link" data-scroll-target="#matched-subset-direct-study-scale-bridge">Matched-subset direct study-scale bridge</a></li>
   <li><a href="#diagnostics-and-interpretation" id="toc-diagnostics-and-interpretation" class="nav-link" data-scroll-target="#diagnostics-and-interpretation">Diagnostics and interpretation</a></li>
   </ul></li>
   <li><a href="#software-and-package-versions" id="toc-software-and-package-versions" class="nav-link" data-scroll-target="#software-and-package-versions">Software and package versions</a></li>
@@ -4576,27 +4582,136 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 <h1>Extension: Where does heterogeneity occur?</h1>
 <p>This extension addresses a different question from the average effect: whether category-specific heterogeneity is attributable mainly to differences <strong>among studies</strong> or to differences <strong>among comparisons within studies</strong>. We distinguish these components because a wider residual distribution supports a statement about consistency among represented comparisons, whereas a wider study distribution is the component relevant to variation in a new study’s mean effect.</p>
 <p>The extension uses the cereal subset with plant- and animal-based organic fertilisers. The full analysis contains 318 effects from 36 studies. Six studies contribute both fertiliser categories (86 effects); a matched subset excluding those studies contains 232 effects from 30 studies. The latter restriction makes fertiliser category constant within every study, which is required for the direct study-scale formulation below.</p>
-<section id="primary-full-data-model" class="level2">
-<h2 class="anchored" data-anchor-id="primary-full-data-model">Primary full-data model</h2>
+<section id="starting-comparator-residual-locationscale-model" class="level2">
+<h2 class="anchored" data-anchor-id="starting-comparator-residual-locationscale-model">Starting comparator: residual location–scale model</h2>
+<p>The residual location–scale model is the useful starting comparator. It allows fertiliser category to change the residual SD among effect sizes within studies, while retaining one common SD for the distribution of study means:</p>
+<p><span class="math display">\[
+y_{ij}=\mu_{g[ij]}+u_j+e_{ij}+m_{ij},\qquad
+u_j\sim\mathcal N(0,\tau^2),\quad
+e_{ij}\sim\mathcal N(0,\sigma_{g[ij]}^2),\quad
+m_{ij}\sim\mathcal N(0,v_{ij}).
+\]</span></p>
+<p>Here <span class="math inline">\(\tau\)</span> is between-study heterogeneity and <span class="math inline">\(\sigma_g\)</span> is residual within-study heterogeneity. A category difference in <span class="math inline">\(\sigma_g\)</span> is therefore not, by itself, a difference in transferability to a new study. The original residual model is available in <code>metafor</code>, <code>glmmTMB</code>, and <code>brms</code> through a category-specific random-effect or dispersion/residual-scale component.</p>
+</section>
+<section id="general-multilevel-locationscale-model" class="level2">
+<h2 class="anchored" data-anchor-id="general-multilevel-locationscale-model">General multilevel location–scale model</h2>
+<p>For the extension, the two variance components receive separate scale sub-models:</p>
+<p><span class="math display">\[
+\begin{aligned}
+y_{ij} &amp;= \mathbf{x}_{ij}^{\mathsf T}\boldsymbol\beta+u_j+e_{ij}+m_{ij},\\
+u_j &amp;\sim \mathcal N(0,\tau_j^2),\qquad
+e_{ij}\sim\mathcal N(0,\sigma_{ij}^2),\qquad
+\mathbf m\sim\mathcal N(\mathbf0,\mathbf V),\\
+\log(\tau_j) &amp;= \mathbf z_j^{\mathsf T}\boldsymbol\gamma_u,\qquad
+\log(\sigma_{ij})=\mathbf w_{ij}^{\mathsf T}\boldsymbol\gamma_e.
+\end{aligned}
+\]</span></p>
+<p>The location, study-scale, and residual-scale moderators need not be the same. A study-scale predictor must be constant within study; a residual-scale predictor may vary among effect sizes. With correlated sampling errors, the scalar <span class="math inline">\(v_{ij}\)</span> is replaced by the sampling covariance matrix <span class="math inline">\(\mathbf V\)</span>.</p>
+</section>
+<section id="categorical-random-coefficients-are-a-locationscale-special-case" class="level2">
+<h2 class="anchored" data-anchor-id="categorical-random-coefficients-are-a-locationscale-special-case">Categorical random coefficients are a location–scale special case</h2>
+<p>For animal (<span class="math inline">\(A\)</span>) and plant (<span class="math inline">\(P\)</span>) fertiliser, category-specific study random coefficients can be written as</p>
+<p><span class="math display">\[
+y_{ij}=\beta_A I(g_{ij}=A)+\beta_P I(g_{ij}=P)
++u_{jA}I(g_{ij}=A)+u_{jP}I(g_{ij}=P)+e_{ij}+m_{ij},
+\]</span></p>
+<p>with <span class="math inline">\(\operatorname{SD}(u_{jA})=\tau_A\)</span> and <span class="math inline">\(\operatorname{SD}(u_{jP})=\tau_P\)</span>. This is both a categorical random-slope model and a heteroscedastic random-effects model. Its diagonal version is equivalent to the categorical scale regression</p>
+<p><span class="math display">\[
+\log(\tau_g)=\gamma_0+\gamma_1I(g=P),
+\]</span></p>
+<p>so that <span class="math inline">\(\tau_A=\exp(\gamma_0)\)</span> and <span class="math inline">\(\tau_P=\exp(\gamma_0+\gamma_1)\)</span>. Direct scale regression is more general: it readily accommodates continuous predictors or several predictors in a scale sub-model.</p>
+<p>Under conventional intercept–slope coding, in contrast, the animal study effect is <span class="math inline">\(u_{0j}\)</span> and the plant study effect is <span class="math inline">\(u_{0j}+u_{1j}\)</span>. Thus</p>
+<p><span class="math display">\[
+\operatorname{Var}(u_{jP})=\operatorname{Var}(u_{0j})+
+\operatorname{Var}(u_{1j})+2\operatorname{Cov}(u_{0j},u_{1j}),
+\]</span></p>
+<p>so the random-slope variance alone is <strong>not</strong> the plant-category variance. Using <code>0 + fertilizer</code> makes the two category-specific SDs directly visible.</p>
+</section>
+<section id="primary-full-data-categorical-model" class="level2">
+<h2 class="anchored" data-anchor-id="primary-full-data-categorical-model">Primary full-data categorical model</h2>
 <p>For each response <span class="math inline">\(y_i\)</span> (lnRR or lnCVR), the primary model uses category-specific study and residual SDs:</p>
 <p><span class="math display">\[y_i \sim \mathcal{N}(\mu_{c[i]},\; v_i + \tau_{c[i]}^2 + \sigma_{c[i]}^2),\]</span></p>
 <p>where <span class="math inline">\(v_i\)</span> is the known sampling variance, <span class="math inline">\(\tau_c\)</span> is the study-level SD, and <span class="math inline">\(\sigma_c\)</span> is the residual SD for fertiliser category <span class="math inline">\(c\)</span>. The covariance between animal and plant study effects is fixed at zero (a diagonal study covariance). This is a stated modelling restriction, not evidence that the correlation is zero.</p>
-<p>This is a categorical random-coefficient model: in <code>brms</code> the study term is written <code>(0 + fertilizer || study_ID)</code>. It estimates a separate category-specific study SD rather than treating the plant random-slope variance as the plant-category variance. Under an intercept-plus-slope representation, the animal study variance is <span class="math inline">\(\operatorname{Var}(u_0)\)</span>, whereas the plant study variance is <span class="math inline">\(\operatorname{Var}(u_0 + u_1)=\operatorname{Var}(u_0)+\operatorname{Var}(u_1)+2\operatorname{Cov}(u_0,u_1)\)</span>. Thus <span class="math inline">\(\operatorname{Var}(u_1)\)</span> alone is not the plant-category variance. Estimating the animal–plant study correlation would require information from studies contributing both categories; only six such studies are present here, so that correlation is weakly identified and is not interpreted.</p>
+<p>This is a categorical random-coefficient model: in <code>brms</code> the study term is written <code>(0 + fertilizer || study_ID)</code>. The covariance between category-specific study effects is fixed to zero. Estimating their correlation would require the six mixed-category studies to carry substantially more information than they do here; the unstructured fit is boundary-prone and is not interpreted.</p>
 <p>The reproducible script <a href="R/study_level_heterogeneity.R"><code>R/study_level_heterogeneity.R</code></a> recalculates lnCVR with <code>correct = TRUE</code>, fits the full-data Bayesian model with <code>brms</code>, builds posterior ratio and prediction tables, and saves the artifact read above. It deliberately does not download or silently create inputs during rendering.</p>
-<div class="cell" data-tbl-cap="Posterior plant-to-animal SD ratios from the full-data primary model.">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transform</span>(</span>
-<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>    study_level_ratios[, <span class="fu">c</span>(<span class="st">&quot;response&quot;</span>, <span class="st">&quot;component&quot;</span>, <span class="st">&quot;estimate&quot;</span>, <span class="st">&quot;lower&quot;</span>, <span class="st">&quot;upper&quot;</span>)],</span>
-<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">estimate =</span> <span class="fu">round</span>(estimate, <span class="dv">2</span>), <span class="at">lower =</span> <span class="fu">round</span>(lower, <span class="dv">2</span>), <span class="at">upper =</span> <span class="fu">round</span>(upper, <span class="dv">2</span>)</span>
-<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="full-data-categorical-analyses-in-three-packages" class="level3">
+<h3 class="anchored" data-anchor-id="full-data-categorical-analyses-in-three-packages">Full-data categorical analyses in three packages</h3>
+<p>The principal calls remain visible here; the accompanying script supplies the complete data preparation, fit checks, and artifact-writing route. All use the full 318 effects from 36 studies. <code>metafor</code> and <code>glmmTMB</code> provide frequentist point-estimate checks, while <code>brms</code> provides posterior intervals and predictions.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>metafor<span class="sc">::</span><span class="fu">rma.mv</span>(</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">yi =</span> data[[response]], <span class="at">V =</span> data[[variance]], <span class="at">mods =</span> <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> fertilizer,</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">random =</span> <span class="fu">list</span>(<span class="sc">~</span> fertilizer <span class="sc">|</span> study_ID, <span class="sc">~</span> fertilizer <span class="sc">|</span> effect_size_ID),</span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">struct =</span> <span class="fu">c</span>(<span class="st">&quot;DIAG&quot;</span>, <span class="st">&quot;DIAG&quot;</span>), <span class="at">test =</span> <span class="st">&quot;t&quot;</span>, <span class="at">method =</span> <span class="st">&quot;REML&quot;</span>, <span class="at">data =</span> data</span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Exploratory only: use &quot;UN&quot; for the first structure to estimate the</span></span>
+<span id="cb40-8"><a href="#cb40-8" aria-hidden="true" tabindex="-1"></a><span class="co"># animal--plant study-effect correlation.  With only six mixed studies this</span></span>
+<span id="cb40-9"><a href="#cb40-9" aria-hidden="true" tabindex="-1"></a><span class="co"># correlation is boundary-prone and is not interpreted.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>model_data <span class="ot">&lt;-</span> <span class="fu">transform</span>(</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  data,</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">study_ID =</span> <span class="fu">factor</span>(study_ID),</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">effect_size_ID =</span> <span class="fu">factor</span>(effect_size_ID),</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">g =</span> <span class="fu">factor</span>(<span class="st">&quot;known_sampling&quot;</span>)</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>V <span class="ot">&lt;-</span> <span class="fu">diag</span>(model_data[[variance]])</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a><span class="fu">dimnames</span>(V) <span class="ot">&lt;-</span> <span class="fu">list</span>(<span class="fu">levels</span>(model_data<span class="sc">$</span>effect_size_ID), <span class="fu">levels</span>(model_data<span class="sc">$</span>effect_size_ID))</span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a>glmmTMB<span class="sc">::</span><span class="fu">glmmTMB</span>(</span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a>  response <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> fertilizer <span class="sc">+</span></span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">diag</span>(<span class="dv">0</span> <span class="sc">+</span> fertilizer <span class="sc">|</span> study_ID) <span class="sc">+</span></span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a>    <span class="fu">equalto</span>(<span class="dv">0</span> <span class="sc">+</span> effect_size_ID <span class="sc">|</span> g, V),</span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">dispformula =</span> <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> fertilizer,</span>
+<span id="cb41-15"><a href="#cb41-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">REML =</span> <span class="cn">TRUE</span>, <span class="at">data =</span> model_data</span>
+<span id="cb41-16"><a href="#cb41-16" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>brms<span class="sc">::</span><span class="fu">brm</span>(</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  brms<span class="sc">::</span><span class="fu">bf</span>(</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    y <span class="sc">|</span> <span class="fu">se</span>(<span class="fu">sqrt</span>(vi), <span class="at">sigma =</span> <span class="cn">TRUE</span>) <span class="sc">~</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>      <span class="dv">0</span> <span class="sc">+</span> fertilizer <span class="sc">+</span> (<span class="dv">0</span> <span class="sc">+</span> fertilizer <span class="sc">||</span> study_ID),</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>    sigma <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> fertilizer</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">gaussian</span>(), <span class="at">prior =</span> historical_primary_spec<span class="sc">$</span>priors,</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">chains =</span> <span class="dv">4</span>, <span class="at">iter =</span> <span class="dv">2000</span>, <span class="at">warmup =</span> <span class="dv">1000</span>, <span class="at">seed =</span> <span class="dv">20260937</span>,</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">backend =</span> <span class="st">&quot;cmdstanr&quot;</span>, <span class="at">control =</span> <span class="fu">list</span>(<span class="at">adapt_delta =</span> <span class="fl">0.99</span>), <span class="at">data =</span> data</span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>The <code>brms</code> residual-scale coefficients (<code>b_sigma_*</code>) are on the log-SD scale. They must be exponentiated before forming SD draws or prediction intervals.</p>
+<div class="cell" data-tbl-cap="Posterior plant-to-animal SD ratios from the full-data primary and prespecified prior-sensitivity models.">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transform</span>(</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    study_level_ratios[, <span class="fu">c</span>(<span class="st">&quot;response&quot;</span>, <span class="st">&quot;model&quot;</span>, <span class="st">&quot;component&quot;</span>, <span class="st">&quot;estimate&quot;</span>, <span class="st">&quot;lower&quot;</span>, <span class="st">&quot;upper&quot;</span>)],</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">model =</span> <span class="fu">ifelse</span>(model <span class="sc">==</span> <span class="st">&quot;extended_primary&quot;</span>, <span class="st">&quot;primary Exp(2)&quot;</span>, <span class="st">&quot;sensitivity Exp(1)&quot;</span>),</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">estimate =</span> <span class="fu">round</span>(estimate, <span class="dv">2</span>), <span class="at">lower =</span> <span class="fu">round</span>(lower, <span class="dv">2</span>), <span class="at">upper =</span> <span class="fu">round</span>(upper, <span class="dv">2</span>)</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
-<caption>Posterior plant-to-animal SD ratios from the full-data primary model.</caption>
+<caption>Posterior plant-to-animal SD ratios from the full-data primary and prespecified prior-sensitivity models.</caption>
+<colgroup>
+<col style="width: 13%">
+<col style="width: 28%">
+<col style="width: 26%">
+<col style="width: 13%">
+<col style="width: 8%">
+<col style="width: 8%">
+</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">response</th>
+<th style="text-align: left;">model</th>
 <th style="text-align: left;">component</th>
 <th style="text-align: right;">estimate</th>
 <th style="text-align: right;">lower</th>
@@ -4606,6 +4721,7 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">primary Exp(2)</td>
 <td style="text-align: left;">study_sd_ratio</td>
 <td style="text-align: right;">2.18</td>
 <td style="text-align: right;">1.11</td>
@@ -4613,6 +4729,7 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 </tr>
 <tr class="even">
 <td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">primary Exp(2)</td>
 <td style="text-align: left;">residual_sd_ratio</td>
 <td style="text-align: right;">1.14</td>
 <td style="text-align: right;">0.94</td>
@@ -4620,6 +4737,7 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 </tr>
 <tr class="odd">
 <td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">primary Exp(2)</td>
 <td style="text-align: left;">study_sd_ratio</td>
 <td style="text-align: right;">1.05</td>
 <td style="text-align: right;">0.10</td>
@@ -4627,49 +4745,107 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 </tr>
 <tr class="even">
 <td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">primary Exp(2)</td>
 <td style="text-align: left;">residual_sd_ratio</td>
 <td style="text-align: right;">1.67</td>
 <td style="text-align: right;">1.18</td>
 <td style="text-align: right;">2.34</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">sensitivity Exp(1)</td>
+<td style="text-align: left;">study_sd_ratio</td>
+<td style="text-align: right;">2.16</td>
+<td style="text-align: right;">1.07</td>
+<td style="text-align: right;">5.62</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">sensitivity Exp(1)</td>
+<td style="text-align: left;">residual_sd_ratio</td>
+<td style="text-align: right;">1.15</td>
+<td style="text-align: right;">0.94</td>
+<td style="text-align: right;">1.39</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">sensitivity Exp(1)</td>
+<td style="text-align: left;">study_sd_ratio</td>
+<td style="text-align: right;">1.05</td>
+<td style="text-align: right;">0.13</td>
+<td style="text-align: right;">6.67</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">sensitivity Exp(1)</td>
+<td style="text-align: left;">residual_sd_ratio</td>
+<td style="text-align: right;">1.66</td>
+<td style="text-align: right;">1.16</td>
+<td style="text-align: right;">2.35</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 <p>For lnRR, the posterior study-SD ratio is 2.18 [1.11, 5.55], while the residual-SD ratio is 1.14 [0.94, 1.40]. For lnCVR, the corresponding ratios are 1.05 [0.10, 8.63] and 1.67 [1.18, 2.34]. Thus, a comparison-specific residual-scale difference should not be relabelled as a study-level transferability difference.</p>
+<p>For a log-SD coefficient <span class="math inline">\(\gamma_1\)</span>, the plant-to-animal ratio is <span class="math inline">\(\exp(\gamma_1)\)</span>. Some software instead models log variance, <span class="math inline">\(\log(\sigma^2)\)</span>; for a coefficient on that scale the corresponding SD ratio is <span class="math inline">\(\exp(\gamma_1/2)\)</span>. This scale distinction is essential when comparing parameterisations across packages.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prespecified sensitivity: change only the study-SD prior from Exp(2) to</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Exp(1), refit, and compare posterior ratios plus R-hat/ESS/divergences.</span></span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>study_sd_prior_sensitivity_spec <span class="ot">&lt;-</span> historical_primary_spec</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>study_sd_prior_sensitivity_spec<span class="sc">$</span>priors <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>  brms<span class="sc">::</span><span class="fu">set_prior</span>(<span class="st">&quot;normal(0, 1)&quot;</span>, <span class="at">class =</span> <span class="st">&quot;b&quot;</span>),</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>  brms<span class="sc">::</span><span class="fu">set_prior</span>(<span class="st">&quot;normal(-1, 1)&quot;</span>, <span class="at">class =</span> <span class="st">&quot;b&quot;</span>, <span class="at">dpar =</span> <span class="st">&quot;sigma&quot;</span>),</span>
+<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>  brms<span class="sc">::</span><span class="fu">set_prior</span>(<span class="st">&quot;exponential(1)&quot;</span>, <span class="at">class =</span> <span class="st">&quot;sd&quot;</span>, <span class="at">group =</span> <span class="st">&quot;study_ID&quot;</span>)</span>
+<span id="cb44-8"><a href="#cb44-8" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>The sensitivity is deliberately prespecified and changes no likelihood, sampling-error treatment, data, or parameterisation. It assesses prior influence on the weakly identified study-scale contrast rather than selecting a prior to reproduce a desired interval.</p>
+</section>
 </section>
 <section id="prediction-targets" class="level2">
 <h2 class="anchored" data-anchor-id="prediction-targets">Prediction targets</h2>
-<p>For an observed new comparison, the predictive variance includes all three sources of variation,</p>
+<p>For a latent new comparison, the predictive variance includes the two heterogeneity components,</p>
+<p><span class="math display">\[\tau_c^2+\sigma_c^2.\]</span></p>
+<p>For an observed new comparison, it also includes sampling variation,</p>
 <p><span class="math display">\[\tau_c^2 + \sigma_c^2 + v_i.\]</span></p>
 <p>For the mean of <span class="math inline">\(k\)</span> new comparisons from one new study, residual and sampling terms are averaged but the study term is not:</p>
-<p><span class="math display">\[\tau_c^2 + \sigma_c^2/k + \bar v/k.\]</span></p>
-<p>The script evaluates these targets at the median sampling variance in each response and category. Therefore, they are explicit prediction scenarios, not generic claims about every future data set.</p>
-<div class="cell" data-tbl-cap="Posterior prediction scenarios at the median sampling variance.">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transform</span>(</span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    study_level_predictions,</span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">median =</span> <span class="fu">round</span>(median, <span class="dv">2</span>), <span class="at">q2.5 =</span> <span class="fu">round</span>(q2<span class="fl">.5</span>, <span class="dv">2</span>), <span class="at">q97.5 =</span> <span class="fu">round</span>(q97<span class="fl">.5</span>, <span class="dv">2</span>)</span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><span class="math display">\[
+\tau_c^2+\frac{\sigma_c^2}{k}+
+\frac{\mathbf1^\mathsf{T}\mathbf V_{\mathrm{new}}\mathbf1}{k^2}.
+\]</span></p>
+<p>For independent equal-variance comparisons, the final term reduces to <span class="math inline">\(v/k\)</span>. The script evaluates these scenarios at a <strong>separate median sampling variance for each response-by-fertiliser category</strong>, rather than one median pooled over fertiliser categories. They are explicit prediction scenarios, not generic claims about every future data set.</p>
+<div class="cell" data-tbl-cap="Posterior prediction scenarios at category-specific median sampling variance.">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transform</span>(</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    study_level_predictions,</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">median =</span> <span class="fu">round</span>(median, <span class="dv">2</span>), <span class="at">q2.5 =</span> <span class="fu">round</span>(q2<span class="fl">.5</span>, <span class="dv">2</span>), <span class="at">q97.5 =</span> <span class="fu">round</span>(q97<span class="fl">.5</span>, <span class="dv">2</span>)</span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
-<caption>Posterior prediction scenarios at the median sampling variance.</caption>
+<caption>Posterior prediction scenarios at category-specific median sampling variance.</caption>
 <colgroup>
-<col style="width: 13%">
-<col style="width: 16%">
-<col style="width: 35%">
-<col style="width: 4%">
+<col style="width: 8%">
 <col style="width: 10%">
+<col style="width: 21%">
+<col style="width: 28%">
 <col style="width: 9%">
-<col style="width: 9%">
+<col style="width: 2%">
+<col style="width: 6%">
+<col style="width: 5%">
+<col style="width: 5%">
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">response</th>
 <th style="text-align: left;">fertilizer</th>
 <th style="text-align: left;">term</th>
+<th style="text-align: left;">vi_scenario</th>
+<th style="text-align: right;">vi</th>
 <th style="text-align: right;">k</th>
 <th style="text-align: right;">median</th>
 <th style="text-align: right;">q2.5</th>
@@ -4680,82 +4856,230 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 <tr class="odd">
 <td style="text-align: left;">lnRR</td>
 <td style="text-align: left;">animal</td>
-<td style="text-align: left;">observed_new_effect</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">-0.20</td>
-<td style="text-align: right;">-2.72</td>
-<td style="text-align: right;">2.43</td>
+<td style="text-align: left;">latent_new_effect</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.0120576</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">-0.21</td>
+<td style="text-align: right;">-0.82</td>
+<td style="text-align: right;">0.43</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">lnRR</td>
 <td style="text-align: left;">animal</td>
+<td style="text-align: left;">observed_new_effect</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.0120576</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-0.21</td>
+<td style="text-align: right;">-0.87</td>
+<td style="text-align: right;">0.45</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">animal</td>
+<td style="text-align: left;">mean_of_1_new_effects</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.0120576</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-0.21</td>
+<td style="text-align: right;">-0.90</td>
+<td style="text-align: right;">0.45</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">animal</td>
+<td style="text-align: left;">mean_of_5_new_effects</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.0120576</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">-0.21</td>
+<td style="text-align: right;">-0.64</td>
+<td style="text-align: right;">0.19</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">animal</td>
 <td style="text-align: left;">mean_of_10_new_effects</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.0120576</td>
 <td style="text-align: right;">10</td>
-<td style="text-align: right;">-0.20</td>
-<td style="text-align: right;">-1.09</td>
-<td style="text-align: right;">0.67</td>
+<td style="text-align: right;">-0.21</td>
+<td style="text-align: right;">-0.59</td>
+<td style="text-align: right;">0.18</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">plant</td>
+<td style="text-align: left;">latent_new_effect</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.0065135</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">-0.45</td>
+<td style="text-align: right;">-1.38</td>
+<td style="text-align: right;">0.50</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">lnRR</td>
 <td style="text-align: left;">plant</td>
 <td style="text-align: left;">observed_new_effect</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.0065135</td>
 <td style="text-align: right;">1</td>
-<td style="text-align: right;">-0.44</td>
-<td style="text-align: right;">-2.94</td>
-<td style="text-align: right;">2.03</td>
+<td style="text-align: right;">-0.45</td>
+<td style="text-align: right;">-1.41</td>
+<td style="text-align: right;">0.48</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">plant</td>
+<td style="text-align: left;">mean_of_1_new_effects</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.0065135</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">-0.46</td>
+<td style="text-align: right;">-1.44</td>
+<td style="text-align: right;">0.50</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">plant</td>
+<td style="text-align: left;">mean_of_5_new_effects</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.0065135</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">-0.45</td>
+<td style="text-align: right;">-1.23</td>
+<td style="text-align: right;">0.31</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">lnRR</td>
 <td style="text-align: left;">plant</td>
 <td style="text-align: left;">mean_of_10_new_effects</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.0065135</td>
 <td style="text-align: right;">10</td>
 <td style="text-align: right;">-0.45</td>
-<td style="text-align: right;">-1.49</td>
-<td style="text-align: right;">0.55</td>
+<td style="text-align: right;">-1.19</td>
+<td style="text-align: right;">0.30</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">lnCVR</td>
 <td style="text-align: left;">animal</td>
-<td style="text-align: left;">observed_new_effect</td>
-<td style="text-align: right;">1</td>
-<td style="text-align: right;">0.23</td>
-<td style="text-align: right;">-1.83</td>
-<td style="text-align: right;">2.39</td>
+<td style="text-align: left;">latent_new_effect</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.3353835</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">-0.78</td>
+<td style="text-align: right;">1.29</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">lnCVR</td>
 <td style="text-align: left;">animal</td>
-<td style="text-align: left;">mean_of_10_new_effects</td>
-<td style="text-align: right;">10</td>
+<td style="text-align: left;">observed_new_effect</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.3353835</td>
+<td style="text-align: right;">1</td>
 <td style="text-align: right;">0.26</td>
-<td style="text-align: right;">-0.56</td>
-<td style="text-align: right;">1.05</td>
+<td style="text-align: right;">-1.27</td>
+<td style="text-align: right;">1.69</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">animal</td>
+<td style="text-align: left;">mean_of_1_new_effects</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.3353835</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: right;">-1.28</td>
+<td style="text-align: right;">1.78</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">animal</td>
+<td style="text-align: left;">mean_of_5_new_effects</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.3353835</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">-0.55</td>
+<td style="text-align: right;">1.09</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">animal</td>
+<td style="text-align: left;">mean_of_10_new_effects</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.3353835</td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: right;">-0.43</td>
+<td style="text-align: right;">0.95</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">plant</td>
+<td style="text-align: left;">latent_new_effect</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.5025905</td>
+<td style="text-align: right;">NA</td>
+<td style="text-align: right;">0.38</td>
+<td style="text-align: right;">-1.14</td>
+<td style="text-align: right;">1.96</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">lnCVR</td>
 <td style="text-align: left;">plant</td>
 <td style="text-align: left;">observed_new_effect</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.5025905</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">0.40</td>
-<td style="text-align: right;">-1.08</td>
-<td style="text-align: right;">1.86</td>
+<td style="text-align: right;">-1.73</td>
+<td style="text-align: right;">2.52</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">plant</td>
+<td style="text-align: left;">mean_of_1_new_effects</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.5025905</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.36</td>
+<td style="text-align: right;">-1.69</td>
+<td style="text-align: right;">2.53</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">plant</td>
+<td style="text-align: left;">mean_of_5_new_effects</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.5025905</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">0.39</td>
+<td style="text-align: right;">-0.74</td>
+<td style="text-align: right;">1.47</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">lnCVR</td>
 <td style="text-align: left;">plant</td>
 <td style="text-align: left;">mean_of_10_new_effects</td>
+<td style="text-align: left;">median_response_by_fertilizer</td>
+<td style="text-align: right;">0.5025905</td>
 <td style="text-align: right;">10</td>
-<td style="text-align: right;">0.38</td>
-<td style="text-align: right;">-0.31</td>
-<td style="text-align: right;">1.13</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: right;">-0.48</td>
+<td style="text-align: right;">1.25</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 </section>
-<section id="full-direct-and-bridge-comparisons" class="level2">
-<h2 class="anchored" data-anchor-id="full-direct-and-bridge-comparisons">Full, direct, and bridge comparisons</h2>
+<section id="matched-subset-direct-study-scale-bridge" class="level2">
+<h2 class="anchored" data-anchor-id="matched-subset-direct-study-scale-bridge">Matched-subset direct study-scale bridge</h2>
 <p>The following comparison separates changes due to data restriction from changes due to model parameterisation.</p>
 <table class="caption-top table">
 <colgroup>
@@ -4794,13 +5118,13 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 </tbody>
 </table>
 <div class="cell" data-tbl-cap="Frequentist SD-ratio comparison for the full data and matched-subset bridge.">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transform</span>(</span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>    study_level_frequentist,</span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">estimate =</span> <span class="fu">round</span>(estimate, <span class="dv">2</span>)</span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transform</span>(</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>    study_level_frequentist,</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">estimate =</span> <span class="fu">round</span>(estimate, <span class="dv">2</span>)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Frequentist SD-ratio comparison for the full data and matched-subset bridge.</caption>
@@ -4909,6 +5233,46 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 </tr>
 <tr class="odd">
 <td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">full_318_effects_36_studies</td>
+<td style="text-align: left;">glmmTMB</td>
+<td style="text-align: left;">primary_glmmTMB</td>
+<td style="text-align: left;">study_sd_ratio</td>
+<td style="text-align: right;">2.10</td>
+<td style="text-align: left;">converged</td>
+<td style="text-align: left;">FALSE</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">full_318_effects_36_studies</td>
+<td style="text-align: left;">glmmTMB</td>
+<td style="text-align: left;">primary_glmmTMB</td>
+<td style="text-align: left;">residual_sd_ratio</td>
+<td style="text-align: right;">1.15</td>
+<td style="text-align: left;">converged</td>
+<td style="text-align: left;">FALSE</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">full_318_effects_36_studies</td>
+<td style="text-align: left;">glmmTMB</td>
+<td style="text-align: left;">primary_glmmTMB</td>
+<td style="text-align: left;">study_sd_ratio</td>
+<td style="text-align: right;">1.02</td>
+<td style="text-align: left;">converged</td>
+<td style="text-align: left;">FALSE</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">full_318_effects_36_studies</td>
+<td style="text-align: left;">glmmTMB</td>
+<td style="text-align: left;">primary_glmmTMB</td>
+<td style="text-align: left;">residual_sd_ratio</td>
+<td style="text-align: right;">1.68</td>
+<td style="text-align: left;">converged</td>
+<td style="text-align: left;">FALSE</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lnRR</td>
 <td style="text-align: left;">matched_subset_232_effects_30_studies</td>
 <td style="text-align: left;">drmTMB</td>
 <td style="text-align: left;">drmTMB_direct_study_scale</td>
@@ -4945,7 +5309,7 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 <td style="text-align: left;">residual_sd_ratio</td>
 <td style="text-align: right;">2.12</td>
 <td style="text-align: left;">ok</td>
-<td style="text-align: left;">TRUE</td>
+<td style="text-align: left;">FALSE</td>
 </tr>
 </tbody>
 </table>
@@ -4953,41 +5317,75 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 </div>
 <p>When applied to the same matched data scope and when fertiliser category is constant within study, the direct and bridge models provide alternative parameterisations of the same category-specific variance structure. Differences between their numerical estimates can nevertheless arise from ML versus REML estimation and from weakly identified variance components.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The script fits this exact model for lnRR, then repeats it for lnCVR.</span></span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>matched_lnRR <span class="ot">&lt;-</span> <span class="fu">transform</span>(matched_data, <span class="at">response =</span> lnRR, <span class="at">V =</span> var.lnRR)</span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>drmTMB<span class="sc">::</span><span class="fu">drmTMB</span>(</span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>  drmTMB<span class="sc">::</span><span class="fu">bf</span>(</span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    response <span class="sc">~</span> fertilizer <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> study_ID) <span class="sc">+</span> drmTMB<span class="sc">::</span><span class="fu">meta_V</span>(<span class="at">V =</span> V),</span>
-<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    sigma <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> fertilizer,</span>
-<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sd</span>(study_ID) <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> fertilizer</span>
-<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">gaussian</span>(), <span class="at">data =</span> matched_lnRR, <span class="at">REML =</span> <span class="cn">FALSE</span></span>
-<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>matched_lnCVR <span class="ot">&lt;-</span> <span class="fu">transform</span>(matched_data, <span class="at">response =</span> lnCVR, <span class="at">V =</span> var.lnCVR)</span>
-<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace `matched_lnRR` above with `matched_lnCVR` to fit the lnCVR version.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The script fits this exact model for lnRR, then repeats it for lnCVR.</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>matched_lnRR <span class="ot">&lt;-</span> <span class="fu">transform</span>(matched_data, <span class="at">response =</span> lnRR, <span class="at">V =</span> var.lnRR)</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>drmTMB<span class="sc">::</span><span class="fu">drmTMB</span>(</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>  drmTMB<span class="sc">::</span><span class="fu">bf</span>(</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>    response <span class="sc">~</span> fertilizer <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">|</span> study_ID) <span class="sc">+</span> drmTMB<span class="sc">::</span><span class="fu">meta_V</span>(<span class="at">V =</span> V),</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>    sigma <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> fertilizer,</span>
+<span id="cb47-7"><a href="#cb47-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">sd</span>(study_ID) <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> fertilizer</span>
+<span id="cb47-8"><a href="#cb47-8" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb47-9"><a href="#cb47-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">family =</span> <span class="fu">gaussian</span>(), <span class="at">data =</span> matched_lnRR, <span class="at">REML =</span> <span class="cn">FALSE</span></span>
+<span id="cb47-10"><a href="#cb47-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb47-11"><a href="#cb47-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-12"><a href="#cb47-12" aria-hidden="true" tabindex="-1"></a>matched_lnCVR <span class="ot">&lt;-</span> <span class="fu">transform</span>(matched_data, <span class="at">response =</span> lnCVR, <span class="at">V =</span> var.lnCVR)</span>
+<span id="cb47-13"><a href="#cb47-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace `matched_lnRR` above with `matched_lnCVR` to fit the lnCVR version.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
 </div>
-<p><code>blsmeta</code> is an optional Bayesian comparator, not a required dependency of the rendered tutorial. If it is installed, fit it only to the matched subset and assess sampler diagnostics before interpreting any study-scale estimate; the present reproducible primary results do not rely on it.</p>
+<p><code>blsmeta</code> is a direct Bayesian study-scale implementation. It is intentionally kept as an optional sensitivity route: it must use the matched subset, with observations sorted by study and a freshly created numeric study index. The fit must not be interpreted unless its convergence checks pass.</p>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>matched_blsmeta <span class="ot">&lt;-</span> matched_data[<span class="fu">order</span>(matched_data<span class="sc">$</span>study_ID,</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a>                                      matched_data<span class="sc">$</span>effect_size_ID), ]</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a>matched_blsmeta<span class="sc">$</span>es_blsmeta <span class="ot">&lt;-</span> <span class="fu">seq_len</span>(<span class="fu">nrow</span>(matched_blsmeta))</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a>matched_blsmeta<span class="sc">$</span>study_blsmeta <span class="ot">&lt;-</span> blsmeta<span class="sc">::</span><span class="fu">make_study_id</span>(matched_blsmeta<span class="sc">$</span>study_ID)</span>
+<span id="cb48-5"><a href="#cb48-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-6"><a href="#cb48-6" aria-hidden="true" tabindex="-1"></a>blsmeta<span class="sc">::</span><span class="fu">blsmeta</span>(</span>
+<span id="cb48-7"><a href="#cb48-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">yi =</span> lnRR, <span class="at">vi =</span> var.lnRR,</span>
+<span id="cb48-8"><a href="#cb48-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">es_id =</span> es_blsmeta, <span class="at">study_id =</span> study_blsmeta,</span>
+<span id="cb48-9"><a href="#cb48-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">mods =</span> <span class="sc">~</span> fertilizer,</span>
+<span id="cb48-10"><a href="#cb48-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">mods_scale2 =</span> <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> fertilizer,  <span class="co"># residual log SD</span></span>
+<span id="cb48-11"><a href="#cb48-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">mods_scale3 =</span> <span class="sc">~</span> <span class="dv">0</span> <span class="sc">+</span> fertilizer,  <span class="co"># study log SD</span></span>
+<span id="cb48-12"><a href="#cb48-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">iter =</span> <span class="dv">20000</span>, <span class="at">warmup =</span> <span class="dv">5000</span>, <span class="at">chains =</span> <span class="dv">4</span>,</span>
+<span id="cb48-13"><a href="#cb48-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> matched_blsmeta</span>
+<span id="cb48-14"><a href="#cb48-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb48-15"><a href="#cb48-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb48-16"><a href="#cb48-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Repeat with yi = lnCVR and vi = var.lnCVR, then check split-R-hat and ESS</span></span>
+<span id="cb48-17"><a href="#cb48-17" aria-hidden="true" tabindex="-1"></a><span class="co"># after warmup before reporting exp(eta[2] - eta[1]) as the study-SD ratio.</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p><code>blsmeta</code> convergence problems are reported as a diagnostic finding, not silently discarded: the previously attempted matched-subset chains failed the predeclared convergence criteria. Its estimates are therefore sensitivity results only, and neither support nor contradict the primary full-data <code>brms</code> inference. The primary rendered results do not depend on <code>blsmeta</code> being installed.</p>
 </section>
 <section id="diagnostics-and-interpretation" class="level2">
 <h2 class="anchored" data-anchor-id="diagnostics-and-interpretation">Diagnostics and interpretation</h2>
 <div class="cell" data-tbl-cap="Diagnostics for the full-data Bayesian primary models.">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transform</span>(</span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>    study_level_diagnostics,</span>
-<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_rhat =</span> <span class="fu">round</span>(max_rhat, <span class="dv">3</span>), <span class="at">min_bulk_ess =</span> <span class="fu">round</span>(min_bulk_ess)</span>
-<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb44-7"><a href="#cb44-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transform</span>(</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    study_level_diagnostics,</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_rhat =</span> <span class="fu">round</span>(max_rhat, <span class="dv">3</span>), <span class="at">min_bulk_ess =</span> <span class="fu">round</span>(min_bulk_ess)</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Diagnostics for the full-data Bayesian primary models.</caption>
+<colgroup>
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 17%">
+<col style="width: 16%">
+<col style="width: 41%">
+</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">response</th>
 <th style="text-align: right;">max_rhat</th>
 <th style="text-align: right;">min_bulk_ess</th>
 <th style="text-align: right;">divergences</th>
+<th style="text-align: left;">model</th>
 </tr>
 </thead>
 <tbody>
@@ -4996,18 +5394,36 @@ This formulation allows the mean and heterogeneity to be evolutionarily or struc
 <td style="text-align: right;">1.008</td>
 <td style="text-align: right;">1002</td>
 <td style="text-align: right;">0</td>
+<td style="text-align: left;">extended_primary</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">lnCVR</td>
 <td style="text-align: right;">1.006</td>
 <td style="text-align: right;">1025</td>
 <td style="text-align: right;">0</td>
+<td style="text-align: left;">extended_primary</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lnRR</td>
+<td style="text-align: right;">1.004</td>
+<td style="text-align: right;">1061</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">extended_sd_prior_sensitivity</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: right;">1.005</td>
+<td style="text-align: right;">1048</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">extended_sd_prior_sensitivity</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 <p>The full-data lnRR model addresses study-level variation directly. In contrast, the stronger lnCVR residual-scale contrast describes wider variability among comparisons within the represented studies. It supports a conditional statement about within-study consistency, not an unconditional claim about transferability to new studies. The analysis does not establish a causal mechanism for either component.</p>
+<p>The primary Bayesian fits must have <span class="math inline">\(\widehat R\leq1.01\)</span>, adequate effective sample sizes, and no unresolved divergences. The prior-sensitivity fits are checked by the same criteria. <code>metafor</code> and <code>glmmTMB</code> provide frequentist cross-checks for the categorical likelihood; they need not agree exactly with the Bayesian posterior summaries or with each other on the matched subset because they differ in estimator (REML versus ML) and parameterisation.</p>
+<p>Only six studies contain both fertiliser categories. Consequently, the animal–plant study-effect correlation is weakly identified, unstructured covariance models are boundary-prone, and the lnCVR study-scale contrast has wide uncertainty. These are limitations of the information in the data, not evidence for a zero SD or a category-specific causal mechanism.</p>
 </section>
 </section>
 <section id="software-and-package-versions" class="level1">
