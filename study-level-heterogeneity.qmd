@@ -1,0 +1,405 @@
+---
+title: "Study-level heterogeneity: Phase-A evidence"
+subtitle: "lnRR and lnCVR in the fertilizer meta-analysis"
+date: last-modified
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    code-tools: true
+    embed-resources: true
+    df-print: paged
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+model_summary <- read.csv(
+  "results/study_level_heterogeneity/model_summary.csv",
+  stringsAsFactors = FALSE
+)
+prediction_summary <- read.csv(
+  "results/study_level_heterogeneity/prediction_summary.csv",
+  stringsAsFactors = FALSE
+)
+diagnostics <- read.csv(
+  "results/study_level_heterogeneity/diagnostics.csv",
+  stringsAsFactors = FALSE
+)
+
+round_numeric <- function(data, digits = 3L) {
+  numeric_columns <- vapply(data, is.numeric, logical(1))
+  data[numeric_columns] <- lapply(data[numeric_columns], round, digits = digits)
+  data
+}
+```
+
+## Purpose and boundary
+
+This page is an analysis checkpoint, not a manuscript revision. It asks whether plant versus animal fertilizer changes two distinct sources of variation:
+
+1. residual variation among effect sizes within studies, which affects how consistently a result generalises across effects or contexts represented within a study; and
+2. variation among study-level effects, which is essential for uncertainty when transferring a result to a genuinely new study.
+
+Both components contribute to a new-study prediction. They are estimated separately for the log response ratio (lnRR) and log coefficient-of-variation ratio (lnCVR). The existing tutorial and manuscript sources were not edited.
+
+## Data audit
+
+The full dataset contains 318 effects from 36 studies: 134 animal-fertilizer effects and 184 plant-fertilizer effects. Six studies include both fertilizer categories (86 effects). A fertilizer predictor on the study-SD submodel must be constant within study, so the direct study-scale analyses use the remaining 232 effects from 30 single-category studies.
+
+| Analysis | Effects | Studies | Why this scope is used |
+|---|---:|---:|---|
+| Full-data categorical model | 318 | 36 | Category-specific study random coefficients allow fertilizer to vary within study. |
+| Matched-subset bridge/direct model | 232 | 30 | Fertilizer is constant within every retained study, as required by the study-scale predictor. |
+
+## Symbolic contract
+
+For fertilizer category \(g\in\{A,P\}\), effect \(i\), and study \(j\), the extended model is
+
+\[
+y_{ijg}=\beta_g+u_{jg}+e_{ijg}+m_{ijg},
+\]
+
+\[
+u_{jg}\sim\mathcal N(0,\sigma_{u,g}^2),\qquad
+e_{ijg}\sim\mathcal N(0,\sigma_{e,g}^2),\qquad
+\mathbf m\sim\mathcal N(\mathbf0,\mathbf V).
+\]
+
+The primary study covariance is diagonal,
+
+\[
+\boldsymbol\Sigma_u=
+\begin{pmatrix}
+\sigma_{u,A}^2&0\\
+0&\sigma_{u,P}^2
+\end{pmatrix},
+\]
+
+and all packages are reported on the same natural-SD scale:
+
+\[
+R_u=\frac{\sigma_{u,P}}{\sigma_{u,A}},\qquad
+R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}.
+\]
+
+For a new study in category \(g\),
+
+\[
+\operatorname{Var}(y_{\text{latent,new},g})=
+\sigma_{u,g}^2+\sigma_{e,g}^2,
+\]
+
+\[
+\operatorname{Var}(y_{\text{observed,new},g})=
+\sigma_{u,g}^2+\sigma_{e,g}^2+v_{\text{new}},
+\]
+
+and the mean of \(k\) effects from one new study has variance
+
+\[
+\operatorname{Var}(\bar y_{\text{new},g})=
+\sigma_{u,g}^2+\frac{\sigma_{e,g}^2}{k}
++\frac{\sum_{r=1}^{k}v_r}{k^2}.
+\]
+
+Here, a latent new *effect* includes study and residual variation but not sampling error. The observed effect adds sampling error. The mean-of-\(k\) target averages residual and sampling variation but retains study variation. The cached `latent_new_study_mean` target is narrower still (\(\beta_g+u_{jg}\)); it is retained as a separate diagnostic target rather than substituted for the declared latent-effect interval. Prediction intervals below propagate posterior uncertainty in the location and both SD parameters.
+
+## Estimator alignment
+
+| Engine | Data | Declared model role | Scale/caveat |
+|---|---|---|---|
+| `metafor` | full | Primary DIAG and exploratory UN study effects | `sqrt(tau2)` is study SD; `sqrt(gamma2)` is residual SD. |
+| `glmmTMB` | full | Exact-likelihood replication of the DIAG model | Dispersion coefficients are log SD; known sampling variance enters through `equalto()`. |
+| `brms` | full | Posterior uncertainty, prediction, and prior sensitivity | `se(sqrt(vi), sigma = TRUE)` preserves known sampling error while estimating residual SD. |
+| `metafor` | matched subset | Categorical bridge | Same 232 effects as the direct study-scale fit. |
+| `drmTMB` | matched subset | Direct fertilizer predictor on `sd(study_ID)` | ML rather than REML; near-zero SDs require boundary diagnostics. |
+| `blsmeta` | matched subset | Direct residual- and study-scale sensitivity | Installed under R 4.6 and fitted after deterministic study-order alignment; study-ratio chain diagnostics did not fully pass, so the estimates are diagnostic rather than claim-bearing. |
+
+The complete executable sources are [baseline.R](R/study_level_heterogeneity/baseline.R), [full_frequentist.R](R/study_level_heterogeneity/full_frequentist.R), [full_bayesian.R](R/study_level_heterogeneity/full_bayesian.R), and [direct_subset.R](R/study_level_heterogeneity/direct_subset.R).
+
+### Key fitting calls
+
+```{r}
+#| eval: false
+# Primary full-data metafor model
+metafor::rma.mv(
+  yi = data[[response]], V = data[[variance]],
+  mods = ~ 0 + fertilizer,
+  random = list(
+    ~ fertilizer | study_ID,
+    ~ fertilizer | effect_size_ID
+  ),
+  struct = c("DIAG", "DIAG"),
+  test = "t", method = "REML", data = data
+)
+
+# Exploratory correlation replaces only the first structure:
+# struct = c("UN", "DIAG")
+```
+
+```{r}
+#| eval: false
+# Exact full-data glmmTMB replication
+glmmTMB::glmmTMB(
+  response ~ 0 + fertilizer +
+    diag(0 + fertilizer | study_ID) +
+    equalto(0 + effect_size_ID | g, V),
+  dispformula = ~ 0 + fertilizer,
+  REML = TRUE,
+  data = data
+)
+```
+
+```{r}
+#| eval: false
+# Bayesian full-data model
+brms::brm(
+  brms::bf(
+    y | se(sqrt(vi), sigma = TRUE) ~
+      0 + fertilizer + (0 + fertilizer || study_ID),
+    sigma ~ 0 + fertilizer
+  ),
+  family = gaussian(),
+  prior = declared_priors,
+  data = data
+)
+```
+
+```{r}
+#| eval: false
+# Direct matched-subset study-scale model
+drmTMB::drmTMB(
+  drmTMB::bf(
+    response ~ fertilizer + (1 | study_ID) + drmTMB::meta_V(V = V),
+    sigma ~ 0 + fertilizer,
+    sd(study_ID) ~ 0 + fertilizer
+  ),
+  family = gaussian(), data = matched_data, REML = FALSE
+)
+```
+
+```{r}
+#| eval: false
+# blsmeta requires the level-three design rows to align with numeric study IDs.
+matched_data <- matched_data[order(matched_data$study_ID, matched_data$effect_size_ID), ]
+matched_data$es_blsmeta <- seq_len(nrow(matched_data))
+matched_data$study_blsmeta <- blsmeta::make_study_id(matched_data$study_ID)
+
+blsmeta::blsmeta(
+  yi = lnRR,
+  vi = var.lnRR,
+  es_id = es_blsmeta,
+  study_id = study_blsmeta,
+  mods = ~ fertilizer,
+  mods_scale2 = ~ 0 + fertilizer,
+  mods_scale3 = ~ 0 + fertilizer,
+  data = matched_data
+)
+
+# Repeat with yi = lnCVR and vi = var.lnCVR.
+```
+
+## Current-model reproduction
+
+The comparator retains one common study SD and allows residual SD to differ by fertilizer. Its deterministic `metafor` estimates reproduce the current analysis within the pre-specified 0.03 tolerance.
+
+```{r}
+#| label: tbl-baseline
+#| tbl-cap: "Reproduced current-model point estimates."
+baseline_table <- model_summary[
+  model_summary$model == "current_common_study_sd" &
+    model_summary$component %in% c("location", "study_sd", "residual_sd", "ratio"),
+  c("response", "component", "term", "estimate")
+]
+knitr::kable(round_numeric(baseline_table), row.names = FALSE)
+```
+
+The original index-based `brms` prior assignment does not provide a reliable Bayesian comparator: it fixed the wrong parameter rather than the known sampling-error multiplier. The Phase-A Bayesian baseline therefore uses the explicit `se(sqrt(vi), sigma = TRUE)` likelihood shown above.
+
+## Full-data study and residual heterogeneity
+
+### Frequentist point estimates
+
+The primary `metafor` and `glmmTMB` estimates agree within \(10^{-5}\). The table reports the primary `metafor` values; the replication is retained in the CSV.
+
+```{r}
+#| label: tbl-full-frequentist
+#| tbl-cap: "Full-data primary DIAG estimates (REML)."
+frequentist_table <- model_summary[
+  model_summary$engine == "metafor" &
+    model_summary$model == "primary_diag" &
+    model_summary$component %in% c("study_sd", "residual_sd", "ratio"),
+  c("response", "component", "term", "estimate")
+]
+knitr::kable(round_numeric(frequentist_table), row.names = FALSE)
+```
+
+For lnRR, the plant study SD is about twice the animal study SD. For lnCVR, the full-data study SDs are nearly equal, whereas the plant residual SD is substantially larger. These are point estimates; the Bayesian intervals below determine how much uncertainty surrounds the ratios.
+
+### Bayesian uncertainty and prior sensitivity
+
+```{r}
+#| label: tbl-bayesian-ratios
+#| tbl-cap: "Posterior SD ratios. Values above one indicate greater plant-fertilizer heterogeneity."
+bayesian_ratios <- model_summary[
+  model_summary$engine == "brms" &
+    model_summary$component == "ratio" &
+    grepl("extended", model_summary$model),
+  c("response", "model", "term", "estimate", "lower", "upper")
+]
+bayesian_ratios$model <- ifelse(
+  grepl("sensitivity", bayesian_ratios$model),
+  "prior sensitivity", "primary prior"
+)
+knitr::kable(round_numeric(bayesian_ratios), row.names = FALSE)
+```
+
+```{r}
+#| label: fig-bayesian-ratios
+#| fig-cap: "Posterior median and 95% credible interval for plant-to-animal residual and study SD ratios under the primary prior. The dashed line is equality."
+#| fig-width: 8
+#| fig-height: 4.8
+ratio_plot <- model_summary[
+  model_summary$engine == "brms" &
+    grepl("extended_primary$", model_summary$model) &
+    model_summary$component == "ratio",
+  c("response", "term", "estimate", "lower", "upper")
+]
+ratio_plot$label <- paste(ratio_plot$response,
+  ifelse(grepl("study", ratio_plot$term), "study SD", "residual SD"), sep = ": ")
+ratio_plot <- ratio_plot[order(ratio_plot$response, ratio_plot$term), ]
+old_par <- par(mar = c(5, 9, 1, 1))
+plot(
+  ratio_plot$estimate, seq_len(nrow(ratio_plot)),
+  xlim = range(c(0.05, ratio_plot$lower, ratio_plot$upper)), log = "x",
+  yaxt = "n", ylab = "", xlab = "Plant / animal SD ratio", pch = 19
+)
+segments(ratio_plot$lower, seq_len(nrow(ratio_plot)), ratio_plot$upper, seq_len(nrow(ratio_plot)))
+abline(v = 1, lty = 2, col = "grey40")
+axis(2, at = seq_len(nrow(ratio_plot)), labels = ratio_plot$label, las = 1)
+par(old_par)
+```
+
+The lnRR study-SD ratio remains above one under both planned study-SD priors. The lnCVR study-SD interval spans large differences in either direction. The lnCVR residual-SD interval is above one; the lnRR residual-SD interval overlaps one. Thus effect-size-level consistency among the represented comparisons and new-study transferability do not tell the same story for the two outcomes.
+
+## New-study predictions
+
+Predictions use category-specific median sampling variance and its first and third quartiles. The first table distinguishes the latent new effect (study plus residual variation, no sampling error) from an observed new effect (which adds sampling error). Both differ from the narrower cached `latent_new_study_mean` diagnostic target, which contains study variation only.
+
+```{r}
+#| label: tbl-prediction-targets
+#| tbl-cap: "Latent-effect and observed-effect prediction intervals from the primary extended model at category-specific median sampling variance."
+prediction_targets <- prediction_summary[
+  grepl("extended_primary$", prediction_summary$model) &
+    prediction_summary$vi_scenario == "median" &
+    prediction_summary$term %in% c("latent_new_effect", "observed_new_effect"),
+  c("response", "fertilizer", "term", "median", "q2.5", "q97.5", "interval_width")
+]
+prediction_targets <- prediction_targets[order(
+  prediction_targets$response, prediction_targets$fertilizer, prediction_targets$term
+), ]
+knitr::kable(round_numeric(prediction_targets), row.names = FALSE)
+```
+
+The next table shows the median-variance scenario for the mean of \(k=1,5,10\) effects from one new study. For \(k=1\), the simulated mean and observed new effect are exactly the same draw, as required by the variance identity.
+
+```{r}
+#| label: tbl-predictions
+#| tbl-cap: "Posterior prediction intervals from the primary extended model at category-specific median sampling variance."
+prediction_table <- prediction_summary[
+  grepl("extended_primary$", prediction_summary$model) &
+    prediction_summary$vi_scenario == "median" &
+    prediction_summary$term %in% c(
+      "mean_of_1_new_effects", "mean_of_5_new_effects", "mean_of_10_new_effects"
+    ),
+  c("response", "fertilizer", "k", "vi", "median", "q2.5", "q97.5", "interval_width")
+]
+prediction_table <- prediction_table[order(prediction_table$response, prediction_table$fertilizer, prediction_table$k), ]
+knitr::kable(round_numeric(prediction_table), row.names = FALSE)
+```
+
+Increasing \(k\) averages down residual and sampling variation but not study-level variation. Consequently, the lnRR plant prediction remains materially wider than the animal prediction as \(k\) increases. For lnCVR, the larger plant residual component matters strongly at small \(k\), but the uncertain study component prevents a firm category-specific transferability conclusion.
+
+The complete median and interquartile-range scenarios are in [prediction_summary.csv](results/study_level_heterogeneity/prediction_summary.csv).
+
+## Matched-subset bridge and direct study-scale fit
+
+The bridge and direct models use the same 232 effects. This prevents case selection from being confused with parameterization. The bridge is REML; `drmTMB` is ML, so close agreement is expected in direction rather than exact numerical equality.
+
+```{r}
+#| label: tbl-direct
+#| tbl-cap: "Matched-subset study and residual SD ratios."
+direct_table <- model_summary[
+  model_summary$data_scope == "matched_subset_232_effects_30_studies" &
+    model_summary$model %in% c(
+      "metafor_DIAG_bridge", "drmTMB_direct_study_scale",
+      "blsmeta_direct_study_scale"
+    ) &
+    model_summary$component == "ratio",
+  c("response", "engine", "model", "term", "estimate", "lower", "upper", "diagnostic_status", "boundary")
+]
+knitr::kable(round_numeric(direct_table), row.names = FALSE)
+```
+
+The lnRR bridge and direct model both estimate substantially greater plant study heterogeneity. For lnCVR, both matched-subset fits place the plant study SD near zero. In the direct `drmTMB` model this triggers a boundary and weak-identification warning, despite a positive-definite Hessian. This is a diagnostic result—not evidence that plant studies are homogeneous—and it conflicts with treating the direct subset as decisive about lnCVR transferability.
+
+`blsmeta` 0.1.0 was found in an older R 4.4 library and reinstalled for the active R 4.6 environment.
+The package fit exposed an important ordering requirement: its study-scale design rows follow first appearance, whereas study random effects are indexed numerically.
+The analysis therefore sorts by study and verifies exact row/index alignment before fitting.
+The corrected lnRR study-SD ratio agrees in direction with the other matched-subset models, but the broader parameter chain did not meet the convergence gate; the lnCVR study ratio remained highly uncertain and its derived-chain diagnostic also exceeded the threshold.
+Both `blsmeta` results are therefore retained as transparent diagnostic sensitivities, not used as headline evidence.
+
+## Diagnostics and limitations
+
+```{r}
+#| label: tbl-diagnostics
+#| tbl-cap: "Compact fit-diagnostic record."
+diagnostic_table <- diagnostics[, c(
+  "response", "data_scope", "engine", "model", "fit_status",
+  "diagnostic_status", "max_rhat", "min_ess_bulk", "min_ess_tail",
+  "divergences", "optimizer_convergence", "max_abs_gradient",
+  "pd_hessian", "boundary", "exploratory_only", "note"
+)]
+knitr::kable(round_numeric(diagnostic_table), row.names = FALSE)
+```
+
+- The primary DIAG model avoids estimating a study-effect correlation from only six mixed-category studies.
+- The exploratory UN correlation is exactly 1 for both outcomes and is treated as an identification warning, not a biological result.
+- `metafor` converged but did not retain numerical gradient or Hessian diagnostics; independent `glmmTMB` replication supplies those checks for the primary model.
+- The lnCVR direct matched-subset study SD is on the lower boundary. A clean optimizer code or Hessian is not sufficient to make that parameter well identified.
+- The corrected `blsmeta` fits ran under R 4.6, but the study-SD ratio chains did not fully satisfy the pre-specified convergence threshold. Their directions do not replace the full-data evidence.
+- The Bayesian prior sensitivity does not reverse the qualitative result: lnRR study heterogeneity is greater under plant fertilizer; lnCVR study heterogeneity remains uncertain.
+- Frequentist and direct rows are point estimates. The 95% uncertainty intervals and predictions come from the full-data Bayesian models.
+
+Machine-readable outputs are [model_summary.csv](results/study_level_heterogeneity/model_summary.csv), [prediction_summary.csv](results/study_level_heterogeneity/prediction_summary.csv), and [diagnostics.csv](results/study_level_heterogeneity/diagnostics.csv).
+
+## Phase-A decision matrix
+
+These are evidence classifications for the scientific checkpoint, not manuscript-ready sentences.
+
+| Question | lnRR | lnCVR |
+|---|---|---|
+| Does residual heterogeneity vary? | **Uncertain:** point estimate is higher for plant, but the 95% credible interval for \(R_e\) overlaps 1. | **Support:** plant residual SD is higher and the 95% credible interval for \(R_e\) excludes 1. |
+| Does study heterogeneity vary? | **Support:** \(R_u>1\) under the primary and sensitivity priors; full-data frequentist and matched-subset fits agree in direction. | **Uncertain:** the full-data interval includes large differences in both directions and the direct subset hits a boundary. |
+| Is plant less transferable to a new study? | **Yes, with qualification:** the plant study SD and new-study intervals are larger. | **Uncertain:** residual variability is higher, but category-specific study variation is not resolved. |
+| Does the current story survive? | **Qualify:** distinguish residual effect-size consistency from study-level transferability and show both components. | **Rewrite:** retain the residual-variability result but do not infer poorer study-level transferability. |
+
+## Reproduce and verify
+
+The fit caches are deliberately outside version control. Refit only the needed slice, then rebuild the summaries and run the acceptance gates:
+
+```{bash}
+Rscript R/study_level_heterogeneity/baseline.R
+Rscript R/study_level_heterogeneity/full_frequentist.R
+Rscript R/study_level_heterogeneity/full_bayesian.R --full
+Rscript R/study_level_heterogeneity/direct_subset.R
+Rscript R/study_level_heterogeneity/verify_phase_a.R all
+```
+
+The verifier checks exact data counts, baseline reproduction, package/parameter alignment, frequentist agreement, Bayesian diagnostics and prior sensitivity, matched-subset identity, and prediction identities.
