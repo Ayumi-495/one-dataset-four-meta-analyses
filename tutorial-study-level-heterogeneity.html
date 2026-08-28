@@ -4713,7 +4713,7 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 </section>
 <section id="full-data-categorical-study-sd-models" class="level3">
 <h3 class="anchored" data-anchor-id="full-data-categorical-study-sd-models">Full-data categorical study-SD models</h3>
-<p>The short calls below are model-grammar templates. The fully executable data construction, fitting, extraction, and diagnostic guards are in <a href="R/study_level_heterogeneity/full_frequentist.R"><code>full_frequentist.R</code></a> and <a href="R/study_level_heterogeneity/full_bayesian.R"><code>full_bayesian.R</code></a>.</p>
+<p>The short calls below show the model grammar used for each implementation. The displayed result tables use compact analysis summaries embedded in this QMD so that the two-file tutorial remains self-contained.</p>
 <section id="study-level-metafor" class="level4">
 <h4 class="anchored" data-anchor-id="study-level-metafor"><code>metafor</code></h4>
 <p>The primary likelihood model uses diagonal animal- and plant-specific random-effect structures at both study and residual levels.</p>
@@ -5571,7 +5571,7 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 </div>
 </div>
 <p><code>blsmeta</code> 0.1.0 was present in an older R 4.4 library and was reinstalled under the active R 4.6 environment. After correcting and guarding the study-order alignment, its lnRR study-SD ratio agreed in direction with the other estimators, but the broader parameter chain failed the convergence gate. For lnCVR, the study-SD interval remained very wide and the derived study-ratio chain also missed the strict target threshold. The <code>blsmeta</code> rows are therefore diagnostic sensitivities, not claim-bearing estimates.</p>
-<p>The complete scripts are <a href="R/study_level_heterogeneity/direct_subset.R"><code>direct_subset.R</code></a> and <a href="R/study_level_heterogeneity/blsmeta_subset.R"><code>blsmeta_subset.R</code></a>.</p>
+<p>The code above records the corresponding <code>drmTMB</code> and <code>blsmeta</code> model specifications.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -5588,7 +5588,7 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 </section>
 <section id="diagnostics-and-interpretation-boundary" class="level3">
 <h3 class="anchored" data-anchor-id="diagnostics-and-interpretation-boundary">Diagnostics and interpretation boundary</h3>
-<div class="cell" data-tbl-cap="Concise fit diagnostics for the study-level extension; the complete diagnostics are available in the linked CSV.">
+<div class="cell" data-tbl-cap="Concise fit diagnostics for the study-level extension.">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="studyext-cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="studyext-cb14-1"><a href="#studyext-cb14-1" aria-hidden="true" tabindex="-1"></a>diagnostic_table <span class="ot">&lt;-</span> study_level_diagnostics[, <span class="fu">c</span>(</span>
@@ -5600,7 +5600,7 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 </details>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
-<caption>Concise fit diagnostics for the study-level extension; the complete diagnostics are available in the linked CSV.</caption>
+<caption>Concise fit diagnostics for the study-level extension.</caption>
 <colgroup>
 <col style="width: 5%">
 <col style="width: 4%">
@@ -5828,7 +5828,6 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 </table>
 </div>
 </div>
-<p>The <a href="results/study_level_heterogeneity/diagnostics.csv">complete diagnostic table</a> retains tail effective sample sizes, optimizer status, gradients, Hessian checks, and diagnostic notes.</p>
 <ul>
 <li>The primary Bayesian fits have <span class="math inline">\(\widehat R\leq1.01\)</span>, adequate bulk and tail effective sample sizes, and no unresolved divergences.</li>
 <li><code>metafor</code> and <code>glmmTMB</code> agree on the primary frequentist point estimates.</li>
@@ -5837,7 +5836,7 @@ R_e=\frac{\sigma_{e,P}}{\sigma_{e,A}}
 <li>The corrected <code>blsmeta</code> fits ran, but their study-ratio target diagnostics did not fully pass; they are reported for transparency and do not replace the full-data models.</li>
 </ul>
 <p>The scientific conclusion is therefore level-specific. For lnRR, the evidence supports greater plant study-level heterogeneity and hence poorer transferability of the study-level mean, with a wide interval and the diagonal covariance assumption stated explicitly. For lnCVR, the evidence supports greater plant residual heterogeneity, but not a difference in transferability of the study-level mean; individual-effect predictions are wider under plant fertiliser.</p>
-<p>The machine-readable outputs are in <code>results/study_level_heterogeneity/</code>, and all fitting and verification scripts are in <code>R/study_level_heterogeneity/</code>.</p>
+<p>The embedded summaries keep the tutorial self-contained while retaining the model estimates and diagnostics used in the displayed tables.</p>
 </section>
 </section>
 </section>

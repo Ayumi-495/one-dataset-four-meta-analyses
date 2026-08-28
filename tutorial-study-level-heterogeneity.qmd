@@ -2539,18 +2539,99 @@ The sections below build the extended model from the notation used above, explai
 ```{r}
 #| label: study-level-results-setup
 #| include: false
-study_level_models <- read.csv(
-  "results/study_level_heterogeneity/model_summary.csv",
-  stringsAsFactors = FALSE
-)
-study_level_predictions <- read.csv(
-  "results/study_level_heterogeneity/prediction_summary.csv",
-  stringsAsFactors = FALSE
-)
-study_level_diagnostics <- read.csv(
-  "results/study_level_heterogeneity/diagnostics.csv",
-  stringsAsFactors = FALSE
-)
+study_level_models <- read.csv(text = '
+response,data_scope,engine,model,component,term,estimate,lower,upper,diagnostic_status,boundary
+lnRR,full_318_effects_36_studies,metafor,current_common_study_sd,location,animal,-0.267911944347663,,,baseline_reproduced,
+lnRR,full_318_effects_36_studies,metafor,current_common_study_sd,location,plant,-0.407822516243521,,,baseline_reproduced,
+lnRR,full_318_effects_36_studies,metafor,current_common_study_sd,study_sd,study_ID,0.246602626563183,,,baseline_reproduced,
+lnRR,full_318_effects_36_studies,metafor,current_common_study_sd,residual_sd,animal,0.258090248448751,,,baseline_reproduced,
+lnRR,full_318_effects_36_studies,metafor,current_common_study_sd,residual_sd,plant,0.306085007050094,,,baseline_reproduced,
+lnRR,full_318_effects_36_studies,metafor,current_common_study_sd,ratio,residual_plant_animal,1.18596114688492,,,baseline_reproduced,
+lnCVR,full_318_effects_36_studies,metafor,current_common_study_sd,location,animal,0.298909731899444,,,baseline_reproduced,
+lnCVR,full_318_effects_36_studies,metafor,current_common_study_sd,location,plant,0.383457737732973,,,baseline_reproduced,
+lnCVR,full_318_effects_36_studies,metafor,current_common_study_sd,study_sd,study_ID,0.235602910594717,,,baseline_reproduced,
+lnCVR,full_318_effects_36_studies,metafor,current_common_study_sd,residual_sd,animal,0.433174460786839,,,baseline_reproduced,
+lnCVR,full_318_effects_36_studies,metafor,current_common_study_sd,residual_sd,plant,0.728165177595508,,,baseline_reproduced,
+lnCVR,full_318_effects_36_studies,metafor,current_common_study_sd,ratio,residual_plant_animal,1.68099748141392,,,baseline_reproduced,
+lnRR,full_318_effects_36_studies,metafor,primary_diag,study_sd,animal,0.150782067640169,,,converged,FALSE
+lnRR,full_318_effects_36_studies,metafor,primary_diag,study_sd,plant,0.316026319062712,,,converged,FALSE
+lnRR,full_318_effects_36_studies,metafor,primary_diag,residual_sd,animal,0.266015643659727,,,converged,FALSE
+lnRR,full_318_effects_36_studies,metafor,primary_diag,residual_sd,plant,0.306705927846264,,,converged,FALSE
+lnRR,full_318_effects_36_studies,metafor,primary_diag,ratio,study_plant_animal,2.09591448113635,,,converged,FALSE
+lnRR,full_318_effects_36_studies,metafor,primary_diag,ratio,residual_plant_animal,1.15296199737255,,,converged,FALSE
+lnCVR,full_318_effects_36_studies,metafor,primary_diag,study_sd,animal,0.233636899707401,,,converged,FALSE
+lnCVR,full_318_effects_36_studies,metafor,primary_diag,study_sd,plant,0.238343552882136,,,converged,FALSE
+lnCVR,full_318_effects_36_studies,metafor,primary_diag,residual_sd,animal,0.436083001856807,,,converged,FALSE
+lnCVR,full_318_effects_36_studies,metafor,primary_diag,residual_sd,plant,0.732727558959134,,,converged,FALSE
+lnCVR,full_318_effects_36_studies,metafor,primary_diag,ratio,study_plant_animal,1.02014516191847,,,converged,FALSE
+lnCVR,full_318_effects_36_studies,metafor,primary_diag,ratio,residual_plant_animal,1.68024792491163,,,converged,FALSE
+lnRR,full_318_effects_36_studies,brms,lnRR_extended_primary,ratio,residual_sd_plant_animal,1.14374732842318,0.940347774367099,1.39694052235082,passed,
+lnRR,full_318_effects_36_studies,brms,lnRR_extended_primary,ratio,study_sd_plant_animal,2.18489576223387,1.10560310899386,5.54556958424833,passed,
+lnRR,full_318_effects_36_studies,brms,lnRR_extended_sd_prior_sensitivity,ratio,residual_sd_plant_animal,1.14738449508991,0.944965604872018,1.39315087905593,passed,
+lnRR,full_318_effects_36_studies,brms,lnRR_extended_sd_prior_sensitivity,ratio,study_sd_plant_animal,2.15788231688712,1.07197615102431,5.62264577327266,passed,
+lnCVR,full_318_effects_36_studies,brms,lnCVR_extended_primary,ratio,residual_sd_plant_animal,1.67184198340668,1.17769262897491,2.3407365328849,passed,
+lnCVR,full_318_effects_36_studies,brms,lnCVR_extended_primary,ratio,study_sd_plant_animal,1.05129579235815,0.0991992778030649,8.63061848467873,passed,
+lnCVR,full_318_effects_36_studies,brms,lnCVR_extended_sd_prior_sensitivity,ratio,residual_sd_plant_animal,1.65946125719125,1.1554144701664,2.35206645195158,passed,
+lnCVR,full_318_effects_36_studies,brms,lnCVR_extended_sd_prior_sensitivity,ratio,study_sd_plant_animal,1.05161434960519,0.128379864084531,6.66565105434748,passed,
+lnRR,matched_subset_232_effects_30_studies,metafor,metafor_DIAG_bridge,ratio,residual_plant_animal,1.11533322183086,,,not_assessed,
+lnRR,matched_subset_232_effects_30_studies,metafor,metafor_DIAG_bridge,ratio,study_plant_animal,2.5838708138301,,,not_assessed,
+lnCVR,matched_subset_232_effects_30_studies,metafor,metafor_DIAG_bridge,ratio,residual_plant_animal,2.13723146975025,,,not_assessed,
+lnCVR,matched_subset_232_effects_30_studies,metafor,metafor_DIAG_bridge,ratio,study_plant_animal,0.000173106247252539,,,not_assessed,
+lnRR,matched_subset_232_effects_30_studies,drmTMB,drmTMB_direct_study_scale,ratio,residual_plant_animal,1.11428184531352,,,ok,
+lnRR,matched_subset_232_effects_30_studies,drmTMB,drmTMB_direct_study_scale,ratio,study_plant_animal,2.6052406476088,,,ok,
+lnCVR,matched_subset_232_effects_30_studies,drmTMB,drmTMB_direct_study_scale,ratio,residual_plant_animal,2.12159028181572,,,warning_or_boundary,TRUE
+lnCVR,matched_subset_232_effects_30_studies,drmTMB,drmTMB_direct_study_scale,ratio,study_plant_animal,0.000189283464857823,,,warning_or_boundary,TRUE
+lnRR,matched_subset_232_effects_30_studies,blsmeta,blsmeta_direct_study_scale,ratio,residual_plant_animal,1.11347113985699,0.890644788599684,1.40155085231389,failed_convergence,
+lnRR,matched_subset_232_effects_30_studies,blsmeta,blsmeta_direct_study_scale,ratio,study_plant_animal,2.50497961040809,1.00477990901929,6.59510201964118,failed_convergence,
+lnCVR,matched_subset_232_effects_30_studies,blsmeta,blsmeta_direct_study_scale,ratio,residual_plant_animal,2.11090635552233,1.4689881198483,3.0328902637923,failed_convergence,
+lnCVR,matched_subset_232_effects_30_studies,blsmeta,blsmeta_direct_study_scale,ratio,study_plant_animal,0.854092881471793,0.200467342918127,3.8415316813776,failed_convergence,
+', stringsAsFactors = FALSE)
+
+study_level_predictions <- read.csv(text = '
+response,model,term,fertilizer,vi_scenario,vi,k,median,q2.5,q97.5,interval_width
+lnRR,lnRR_extended_primary,latent_new_effect,animal,median,0.012057566,,-0.204674073237545,-0.830348299330168,0.388224337419758,1.21857263674993
+lnRR,lnRR_extended_primary,observed_new_effect,animal,median,0.012057566,1,-0.223841171289028,-0.865876563131263,0.435472082432913,1.30134864556418
+lnRR,lnRR_extended_primary,mean_of_1_new_effects,animal,median,0.012057566,1,-0.223841171289028,-0.865876563131263,0.435472082432913,1.30134864556418
+lnRR,lnRR_extended_primary,mean_of_5_new_effects,animal,median,0.012057566,5,-0.211389229857771,-0.631106622929999,0.210346254384012,0.841452877314011
+lnRR,lnRR_extended_primary,mean_of_10_new_effects,animal,median,0.012057566,10,-0.219178278200453,-0.605074710385451,0.154301797163441,0.759376507548892
+lnRR,lnRR_extended_primary,latent_new_effect,plant,median,0.006513485,,-0.466316752148981,-1.35323482065731,0.480079948912087,1.8333147695694
+lnRR,lnRR_extended_primary,observed_new_effect,plant,median,0.006513485,1,-0.469845344121667,-1.40565524422974,0.501197840339938,1.90685308456968
+lnRR,lnRR_extended_primary,mean_of_1_new_effects,plant,median,0.006513485,1,-0.469845344121667,-1.40565524422974,0.501197840339938,1.90685308456968
+lnRR,lnRR_extended_primary,mean_of_5_new_effects,plant,median,0.006513485,5,-0.454831374792206,-1.22875185744207,0.320169225028375,1.54892108247044
+lnRR,lnRR_extended_primary,mean_of_10_new_effects,plant,median,0.006513485,10,-0.464578581016796,-1.21847687473931,0.297619182659977,1.51609605739929
+lnCVR,lnCVR_extended_primary,latent_new_effect,animal,median,0.335383545990053,,0.267825278552496,-0.797226051195771,1.2480144791651,2.04524053036087
+lnCVR,lnCVR_extended_primary,observed_new_effect,animal,median,0.335383545990053,1,0.261579796486014,-1.3021509064301,1.78964341904177,3.09179432547187
+lnCVR,lnCVR_extended_primary,mean_of_1_new_effects,animal,median,0.335383545990053,1,0.261579796486014,-1.3021509064301,1.78964341904177,3.09179432547187
+lnCVR,lnCVR_extended_primary,mean_of_5_new_effects,animal,median,0.335383545990053,5,0.277436074414687,-0.574232231785958,1.11181863509974,1.6860508668857
+lnCVR,lnCVR_extended_primary,mean_of_10_new_effects,animal,median,0.335383545990053,10,0.264909226135982,-0.392531505501164,0.950346206808866,1.34287771231003
+lnCVR,lnCVR_extended_primary,latent_new_effect,plant,median,0.502590506063863,,0.377541385249999,-1.16346612684891,2.00334146713257,3.16680759398148
+lnCVR,lnCVR_extended_primary,observed_new_effect,plant,median,0.502590506063863,1,0.392468482020769,-1.7227227686515,2.43993125427385,4.16265402292535
+lnCVR,lnCVR_extended_primary,mean_of_1_new_effects,plant,median,0.502590506063863,1,0.392468482020769,-1.7227227686515,2.43993125427385,4.16265402292535
+lnCVR,lnCVR_extended_primary,mean_of_5_new_effects,plant,median,0.502590506063863,5,0.383400965791167,-0.705651350007623,1.45449439392914,2.16014574393676
+lnCVR,lnCVR_extended_primary,mean_of_10_new_effects,plant,median,0.502590506063863,10,0.384598120300829,-0.46837585464623,1.29926138933033,1.76763724397656
+', stringsAsFactors = FALSE)
+
+study_level_diagnostics <- read.csv(text = '
+response,engine,model,diagnostic_status,max_rhat,min_ess_bulk,divergences,boundary,exploratory_only
+lnRR,metafor,primary_diag,converged,,,,FALSE,FALSE
+lnRR,glmmTMB,primary_glmmTMB,converged,,,,FALSE,FALSE
+lnRR,metafor,sensitivity_un,at_or_near_boundary,,,,TRUE,TRUE
+lnCVR,metafor,primary_diag,converged,,,,FALSE,FALSE
+lnCVR,glmmTMB,primary_glmmTMB,converged,,,,FALSE,FALSE
+lnCVR,metafor,sensitivity_un,at_or_near_boundary,,,,TRUE,TRUE
+lnCVR,brms,lnCVR_baseline_primary,passed,1.00394440976353,1520.06506864659,0,FALSE,FALSE
+lnCVR,brms,lnCVR_extended_primary,passed,1.00560248609219,1071.19273874391,0,FALSE,FALSE
+lnCVR,brms,lnCVR_extended_sd_prior_sensitivity,passed,1.00477170587346,1149.14166322956,0,FALSE,FALSE
+lnRR,brms,lnRR_baseline_primary,passed,1.00408159402544,1142.86163732246,0,FALSE,FALSE
+lnRR,brms,lnRR_extended_primary,passed,1.00847836470374,1002.11921891915,0,FALSE,FALSE
+lnRR,brms,lnRR_extended_sd_prior_sensitivity,passed,1.00416577608815,1184.19219507692,0,FALSE,FALSE
+lnRR,drmTMB,drmTMB_common_study_scale,ok,,,,FALSE,FALSE
+lnRR,drmTMB,drmTMB_direct_study_scale,ok,,,,FALSE,FALSE
+lnCVR,drmTMB,drmTMB_common_study_scale,ok,,,,FALSE,FALSE
+lnCVR,drmTMB,drmTMB_direct_study_scale,warning_or_boundary,,,,TRUE,FALSE
+lnRR,blsmeta,blsmeta_direct_study_scale,failed_convergence,1.14358821534898,46.4312214035195,,FALSE,FALSE
+lnCVR,blsmeta,blsmeta_direct_study_scale,failed_convergence,1.00956637434277,1479.00678737349,,FALSE,FALSE
+', stringsAsFactors = FALSE)
 
 round_numeric_columns <- function(data, digits = 3L) {
   numeric_columns <- vapply(data, is.numeric, logical(1))
@@ -2665,8 +2746,8 @@ The Bayesian extension therefore uses the explicit `se(sqrt(vi), sigma = TRUE)` 
 
 ### Full-data categorical study-SD models
 
-The short calls below are model-grammar templates.
-The fully executable data construction, fitting, extraction, and diagnostic guards are in [`full_frequentist.R`](R/study_level_heterogeneity/full_frequentist.R) and [`full_bayesian.R`](R/study_level_heterogeneity/full_bayesian.R).
+The short calls below show the model grammar used for each implementation.
+The displayed result tables use compact analysis summaries embedded in this QMD so that the two-file tutorial remains self-contained.
 
 #### `metafor` {#study-level-metafor}
 
@@ -2972,7 +3053,7 @@ After correcting and guarding the study-order alignment, its lnRR study-SD ratio
 For lnCVR, the study-SD interval remained very wide and the derived study-ratio chain also missed the strict target threshold.
 The `blsmeta` rows are therefore diagnostic sensitivities, not claim-bearing estimates.
 
-The complete scripts are [`direct_subset.R`](R/study_level_heterogeneity/direct_subset.R) and [`blsmeta_subset.R`](R/study_level_heterogeneity/blsmeta_subset.R).
+The code above records the corresponding `drmTMB` and `blsmeta` model specifications.
 
 ::: callout-note
 ### Analysis environment
@@ -2985,7 +3066,7 @@ The new study-level fits were run under R 4.6.0 with `metafor` 5.0.1, `glmmTMB` 
 
 ```{r}
 #| label: study-level-diagnostics
-#| tbl-cap: "Concise fit diagnostics for the study-level extension; the complete diagnostics are available in the linked CSV."
+#| tbl-cap: "Concise fit diagnostics for the study-level extension."
 #| code-fold: true
 diagnostic_table <- study_level_diagnostics[, c(
   "response", "engine", "model", "diagnostic_status",
@@ -2994,8 +3075,6 @@ diagnostic_table <- study_level_diagnostics[, c(
 )]
 knitr::kable(round_numeric_columns(diagnostic_table), row.names = FALSE)
 ```
-
-The [complete diagnostic table](results/study_level_heterogeneity/diagnostics.csv) retains tail effective sample sizes, optimizer status, gradients, Hessian checks, and diagnostic notes.
 
 -   The primary Bayesian fits have $\widehat R\leq1.01$, adequate bulk and tail effective sample sizes, and no unresolved divergences.
 -   `metafor` and `glmmTMB` agree on the primary frequentist point estimates.
@@ -3007,7 +3086,7 @@ The scientific conclusion is therefore level-specific.
 For lnRR, the evidence supports greater plant study-level heterogeneity and hence poorer transferability of the study-level mean, with a wide interval and the diagonal covariance assumption stated explicitly.
 For lnCVR, the evidence supports greater plant residual heterogeneity, but not a difference in transferability of the study-level mean; individual-effect predictions are wider under plant fertiliser.
 
-The machine-readable outputs are in `results/study_level_heterogeneity/`, and all fitting and verification scripts are in `R/study_level_heterogeneity/`.
+The embedded summaries keep the tutorial self-contained while retaining the model estimates and diagnostics used in the displayed tables.
 
 # Software and package versions
 
