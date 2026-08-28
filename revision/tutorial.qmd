@@ -50,6 +50,8 @@ The scope of this tutorial is deliberately focused on conceptual comparison and 
 We do not provide an introduction to meta-analytic theory, effect size calculation, or general R programming, as these topics are well covered elsewhere.
 Instead, the tutorial uses a single dataset to demonstrate four complementary meta-analytic perspectives, highlighting their assumptions, strengths, and limitations.
 
+Standardised mean differences, odds ratios, and Fisher's z-transformed correlations can all be analysed in multilevel meta-regression and heterogeneity models, including moderator-dependent residual or study-level heterogeneity when the data support it. However, these effect measures do not themselves provide the same direct contrast in within-group variability. A mean-versus-variability workflow therefore needs a separate dispersion-focused effect size, such as lnVR or lnCVR, when suitable group-level data are available. In particular, the within-group SD in a standardised mean difference standardises the mean contrast; it does not directly estimate a between-group variability contrast.
+
 For clarity, the four meta-analytic models illustrated in this tutorial are:
 
 -   Model 1 (mean-effect meta-analysis): synthesis of mean effects using the log response ratio (lnRR)
@@ -109,6 +111,22 @@ First, we need to load necessary packages.
 # needed packages
 pacman::p_load("brms", "glmmTMB", "metafor", "tidyverse", 
                "tidybayes", "orchaRd", "here")
+
+# Cached fitted objects are deliberately separate from the source document.
+# From revision/, regenerate them with:
+# Rscript R/regenerate_tutorial_artifacts.R
+# Rscript R/study_level_heterogeneity.R --fit-bayesian
+read_cached_artifact <- function(name) {
+  path <- here::here("Rdata", name)
+  if (!file.exists(path)) {
+    stop(
+      "Missing cached artifact: ", path, "\n",
+      "Run the documented regeneration command from revision/ before rendering.",
+      call. = FALSE
+    )
+  }
+  readRDS(path)
+}
 ```
 
 ::: callout-note
@@ -376,7 +394,7 @@ i2_ml(mod_lnRR)
 #| echo: false
 #| fig-align: center
 
-orchard_ma_lnRR <- readRDS(here::here("Rdata", "orchard_ma_lnRR.rds"))
+orchard_ma_lnRR <- read_cached_artifact("orchard_ma_lnRR.rds")
 orchard_ma_lnRR
 
 ```
@@ -435,7 +453,7 @@ r2_ml(mod_lnRR_mr)
 #| echo: false
 #| fig-align: center
 
-mod_lnRR_mr <- readRDS(here::here("Rdata", "mod_lnRR_mr_metafor.rds"))
+mod_lnRR_mr <- read_cached_artifact("mod_lnRR_mr_metafor.rds")
 
 orchard_plot(mod_lnRR_mr, 
              mod = "Org.fertilizer.type",
@@ -557,7 +575,7 @@ summary(fit_ma1)
 #| echo: false
 #| fig-align: center
 
-fit_ma1 <- readRDS(here::here("Rdata", "fit_ma1.rds"))
+fit_ma1 <- read_cached_artifact("fit_ma1.rds")
 p1 <- visualize_fixed_effects(fit_ma1)
 p2 <- visualize_random_effects(fit_ma1)
 p1 + p2
@@ -644,7 +662,7 @@ summary(fit_mr1)
 ```{r}
 #| echo: false
 
-fit_mr1 <- readRDS(here::here("Rdata", "fit_mr1.rds"))
+fit_mr1 <- read_cached_artifact("fit_mr1.rds")
 
 ```
 
@@ -885,13 +903,13 @@ i2_ml(mod_lnCVR)
 #| echo: false
 #| fig-align: center
 
-orchard_ma_lnCVR <- readRDS(here::here("Rdata", "orchard_ma_lnCVR.rds"))
+orchard_ma_lnCVR <- read_cached_artifact("orchard_ma_lnCVR.rds")
 orchard_ma_lnCVR
 
 ```
 
 The intercept from the multilevel meta-analysis represents the overall mean lnCVR across all comparisons.
-A positive estimate indicates that the treatment group has a larger CV than the control group, meaning greater relative variability (lower stability) after accounting for potential differences in the mean values.
+A positive estimate indicates that the treatment group has a larger CV than the control group, indicating greater mean-corrected within-group variability after accounting for potential differences in the mean values.
 
 Here, the estimated lnCVR is $\beta_0 = 0.34$ (95% CI = [0.20, 0.48]), suggesting that organic farming is associated with approximately 41% higher relative variability in crop yields compared to conventional farming ($\exp(0.34) - 1$).
 
@@ -943,7 +961,7 @@ i2_ml(mod_lnVR)
 #| echo: false
 #| fig-align: center
 
-orchard_ma_lnVR <- readRDS(here::here("Rdata", "orchard_ma_lnVR.rds"))
+orchard_ma_lnVR <- read_cached_artifact("orchard_ma_lnVR.rds")
 orchard_ma_lnVR
 
 ```
@@ -1015,7 +1033,7 @@ r2_ml(mod_lnCVR_mr)
 #| echo: false
 #| fig-align: center
 
-mod_lnCVR_mr <- readRDS(here::here("Rdata", "mod_lnCVR_mr_metafor.rds"))
+mod_lnCVR_mr <- read_cached_artifact("mod_lnCVR_mr_metafor.rds")
 orchard_plot(mod_lnCVR_mr, 
              mod = "Org.fertilizer.type",
              xlab = "lnCVR", 
@@ -1076,7 +1094,7 @@ r2_ml(mod_lnVR_mr)
 #| echo: false
 #| fig-align: center
 
-mod_lnVR_mr <- readRDS(here::here("Rdata", "mod_lnVR_mr_metafor.rds"))
+mod_lnVR_mr <- read_cached_artifact("mod_lnVR_mr_metafor.rds")
 orchard_plot(mod_lnVR_mr, 
              mod = "Org.fertilizer.type",
              xlab = "lnVR", 
@@ -1173,7 +1191,7 @@ summary(fit_ma2)
 #| echo: false
 #| fig-align: center
 
-fit_ma2 <- readRDS(here::here("Rdata", "fit_ma2.rds"))
+fit_ma2 <- read_cached_artifact("fit_ma2.rds")
 p1 <- visualize_fixed_effects(fit_ma2) 
 p2 <- visualize_random_effects(fit_ma2)
 p1 + p2
@@ -1243,7 +1261,7 @@ summary(fit_ma3)
 #| echo: false
 #| fig-align: center
 
-fit_ma3 <- readRDS(here::here("Rdata", "fit_ma3.rds"))
+fit_ma3 <- read_cached_artifact("fit_ma3.rds")
 p1 <- visualize_fixed_effects(fit_ma3) 
 p2 <- visualize_random_effects(fit_ma3)
 p1 + p2
@@ -1822,7 +1840,7 @@ summary(mod_lnRR_mr2)
 #| echo: false
 #| fig-align: center
 
-orchard_mr_lnRR <- readRDS(here::here("Rdata", "orchard_mr_lnRR.rds"))
+orchard_mr_lnRR <- read_cached_artifact("orchard_mr_lnRR.rds")
 orchard_mr_lnRR
 
 ```
@@ -1879,7 +1897,7 @@ summary(mod_lnCVR_mr2)
 #| echo: false
 #| fig-align: center
 
-orchard_mr_lnCVR <- readRDS(here::here("Rdata", "orchard_mr_lnCVR.rds"))
+orchard_mr_lnCVR <- read_cached_artifact("orchard_mr_lnCVR.rds")
 orchard_mr_lnCVR
 
 ```
@@ -1935,7 +1953,7 @@ summary(mod_lnVR_mr2)
 #| echo: false
 #| fig-align: center
 
-orchard_mr_lnVR <- readRDS(here::here("Rdata", "orchard_mr_lnVR.rds"))
+orchard_mr_lnVR <- read_cached_artifact("orchard_mr_lnVR.rds")
 orchard_mr_lnVR
 
 ```
@@ -2070,7 +2088,7 @@ summary(fit_ls_ma1)
 #| echo: false
 #| fig-align: center
 
-fit_ls_ma1 <- readRDS(here::here("Rdata", "fit_ls_ma1.rds"))
+fit_ls_ma1 <- read_cached_artifact("fit_ls_ma1.rds")
 
 p3 <- visualize_fixed_effects(fit_ls_ma1)
 p4 <- visualize_random_effects2(fit_ls_ma1)
@@ -2152,7 +2170,7 @@ summary(fit_ls_ma2)
 #| echo: false
 #| fig-align: center
 
-fit_ls_ma2 <- readRDS(here::here("Rdata", "fit_ls_ma2.rds"))
+fit_ls_ma2 <- read_cached_artifact("fit_ls_ma2.rds")
 
 p3 <- visualize_fixed_effects(fit_ls_ma2)
 p4 <- visualize_random_effects2(fit_ls_ma2)
@@ -2162,14 +2180,14 @@ p3 + p4
 
 For lnCVR, the location component indicated that organic systems tend to exhibit higher mean-corrected variability under animal-based fertilisers ($\beta^{(l)}_{\text{animal}} = 0.30$, 95% CrI = [0.13, 0.47]), corresponding to an average CV ratio of $\exp(0.30) \approx 1.35$, roughly 35% higher variability in organic relative to conventional systems.
 
-The contrast coefficient for fertiliser type in the location component was small and highly uncertain ($\beta^{(l)}_{\text{plant-animal}} = 0.08$, 95% CrI = [-0.16, 0.31]), suggesting that fertiliser category does not systematically shift the average stability difference between organic and conventional systems.
+The contrast coefficient for fertiliser type in the location component was small and highly uncertain ($\beta^{(l)}_{\text{plant-animal}} = 0.08$, 95% CrI = [-0.16, 0.31]), suggesting that fertiliser category does not systematically shift the average mean-corrected within-group-variability contrast between organic and conventional systems.
 
-In contrast, the scale component revealed clear evidence that fertiliser type strongly governs the predictability of lnCVR effects.
+In contrast, the scale component showed a larger residual-scale component for plant-based fertilisers.
 Residual heterogeneity was substantially larger under plant-based fertilisers ($\beta^{(s)}_{\text{plant-animal}} = 0.51$, 95% CrI = [0.17, 0.86]), corresponding to a multiplicative increase in residual variability of approximately 67% ($\exp(0.51) \approx 1.67$).
 Under this model, the implied residual standard deviation for lnCVR under plant-based fertilisers is $\sigma \approx \exp(-0.84 + 0.51) \approx 0.72$.
 
-Thus, while the expected magnitude of the stability gap (lnCVR) is broadly similar across fertiliser categories, the evidence is far less transferable under plant-based fertilisers.
-Some studies show near parity in stability between organic and conventional systems, whereas others show much larger differences, indicating strong context dependence.
+Thus, while the expected magnitude of the mean-corrected within-group-variability contrast (lnCVR) is broadly similar across fertiliser categories, the represented comparisons have a wider residual spread under plant-based fertilisers.
+This residual-scale contrast concerns consistency within the analysed studies; it does not by itself establish poorer transferability to a new study.
 
 <!-- #### lnVR -->
 
@@ -2554,12 +2572,160 @@ summary(glmm_lnRR2)
 
 ```
 
+# Extension: Where does heterogeneity occur?
+
+This extension addresses a different question from the average effect: whether category-specific heterogeneity is attributable mainly to differences **among studies** or to differences **among comparisons within studies**. We distinguish these components because a wider residual distribution supports a statement about consistency among represented comparisons, whereas a wider study distribution is the component relevant to variation in a new study's mean effect.
+
+The extension uses the cereal subset with plant- and animal-based organic fertilisers. The full analysis contains 318 effects from 36 studies. Six studies contribute both fertiliser categories (86 effects); a matched subset excluding those studies contains 232 effects from 30 studies. The latter restriction makes fertiliser category constant within every study, which is required for the direct study-scale formulation below.
+
+```{r}
+#| label: study-level-artifact-setup
+#| include: false
+
+study_level_artifacts <- read_cached_artifact("study_level_artifacts.rds")
+stopifnot(
+  identical(
+    unname(unlist(study_level_artifacts$counts)),
+    c(318L, 36L, 6L, 86L, 232L, 30L)
+  )
+)
+study_level_ratios <- study_level_artifacts$ratios
+study_level_predictions <- study_level_artifacts$predictions
+study_level_diagnostics <- study_level_artifacts$diagnostics
+study_level_frequentist <- study_level_artifacts$frequentist
+matched_data <- study_level_artifacts$matched_data
+
+format_ratio <- function(response_name, component_name) {
+  row <- study_level_ratios[
+    study_level_ratios$response == response_name &
+      study_level_ratios$component == component_name,
+    ]
+  stopifnot(nrow(row) == 1L)
+  sprintf("%.2f [%.2f, %.2f]", row$estimate, row$lower, row$upper)
+}
+```
+
+## Primary full-data model
+
+For each response $y_i$ (lnRR or lnCVR), the primary model uses category-specific study and residual SDs:
+
+$$y_i \sim \mathcal{N}(\mu_{c[i]},\; v_i + \tau_{c[i]}^2 + \sigma_{c[i]}^2),$$
+
+where $v_i$ is the known sampling variance, $\tau_c$ is the study-level SD, and $\sigma_c$ is the residual SD for fertiliser category $c$. The covariance between animal and plant study effects is fixed at zero (a diagonal study covariance). This is a stated modelling restriction, not evidence that the correlation is zero.
+
+This is a categorical random-coefficient model: in `brms` the study term is written `(0 + fertilizer || study_ID)`. It estimates a separate category-specific study SD rather than treating the plant random-slope variance as the plant-category variance. Under an intercept-plus-slope representation, the animal study variance is $\operatorname{Var}(u_0)$, whereas the plant study variance is $\operatorname{Var}(u_0 + u_1)=\operatorname{Var}(u_0)+\operatorname{Var}(u_1)+2\operatorname{Cov}(u_0,u_1)$. Thus $\operatorname{Var}(u_1)$ alone is not the plant-category variance. Estimating the animal--plant study correlation would require information from studies contributing both categories; only six such studies are present here, so that correlation is weakly identified and is not interpreted.
+
+The reproducible script [`R/study_level_heterogeneity.R`](R/study_level_heterogeneity.R) recalculates lnCVR with `correct = TRUE`, fits the full-data Bayesian model with `brms`, builds posterior ratio and prediction tables, and saves the artifact read above. It deliberately does not download or silently create inputs during rendering.
+
+```{r}
+#| label: study-level-ratios
+#| tbl-cap: "Posterior plant-to-animal SD ratios from the full-data primary model."
+
+knitr::kable(
+  transform(
+    study_level_ratios[, c("response", "component", "estimate", "lower", "upper")],
+    estimate = round(estimate, 2), lower = round(lower, 2), upper = round(upper, 2)
+  ),
+  row.names = FALSE
+)
+```
+
+For lnRR, the posterior study-SD ratio is `r format_ratio("lnRR", "study_sd_ratio")`, while the residual-SD ratio is `r format_ratio("lnRR", "residual_sd_ratio")`. For lnCVR, the corresponding ratios are `r format_ratio("lnCVR", "study_sd_ratio")` and `r format_ratio("lnCVR", "residual_sd_ratio")`. Thus, a comparison-specific residual-scale difference should not be relabelled as a study-level transferability difference.
+
+## Prediction targets
+
+For an observed new comparison, the predictive variance includes all three sources of variation,
+
+$$\tau_c^2 + \sigma_c^2 + v_i.$$
+
+For the mean of $k$ new comparisons from one new study, residual and sampling terms are averaged but the study term is not:
+
+$$\tau_c^2 + \sigma_c^2/k + \bar v/k.$$
+
+The script evaluates these targets at the median sampling variance in each response and category. Therefore, they are explicit prediction scenarios, not generic claims about every future data set.
+
+```{r}
+#| label: study-level-predictions
+#| tbl-cap: "Posterior prediction scenarios at the median sampling variance."
+
+knitr::kable(
+  transform(
+    study_level_predictions,
+    median = round(median, 2), q2.5 = round(q2.5, 2), q97.5 = round(q97.5, 2)
+  ),
+  row.names = FALSE
+)
+```
+
+## Full, direct, and bridge comparisons
+
+The following comparison separates changes due to data restriction from changes due to model parameterisation.
+
+| Analysis | Data | Purpose | Interpretation boundary |
+|---|---:|---|---|
+| Full categorical model | 318 effects; 36 studies | Primary category-specific study and residual SDs | Includes six studies with both categories; diagonal study covariance is assumed. |
+| Direct `drmTMB` study-scale model | 232 effects; 30 studies | Places category predictors directly on residual and study SDs | Valid only when category is constant within a study; fitted with ML. |
+| `metafor` bridge | Same 232 effects; 30 studies | Tests the impact of the subset using a category-specific diagonal model | Uses REML, so it is a scope bridge rather than an exact estimator match. |
+
+```{r}
+#| label: study-level-bridge
+#| tbl-cap: "Frequentist SD-ratio comparison for the full data and matched-subset bridge."
+
+knitr::kable(
+  transform(
+    study_level_frequentist,
+    estimate = round(estimate, 2)
+  ),
+  row.names = FALSE
+)
+```
+
+When applied to the same matched data scope and when fertiliser category is constant within study, the direct and bridge models provide alternative parameterisations of the same category-specific variance structure. Differences between their numerical estimates can nevertheless arise from ML versus REML estimation and from weakly identified variance components.
+
+```{r}
+#| label: study-level-drmtmb-code
+#| eval: false
+
+# The script fits this exact model for lnRR, then repeats it for lnCVR.
+matched_lnRR <- transform(matched_data, response = lnRR, V = var.lnRR)
+drmTMB::drmTMB(
+  drmTMB::bf(
+    response ~ fertilizer + (1 | study_ID) + drmTMB::meta_V(V = V),
+    sigma ~ 0 + fertilizer,
+    sd(study_ID) ~ 0 + fertilizer
+  ),
+  family = gaussian(), data = matched_lnRR, REML = FALSE
+)
+
+matched_lnCVR <- transform(matched_data, response = lnCVR, V = var.lnCVR)
+# Replace `matched_lnRR` above with `matched_lnCVR` to fit the lnCVR version.
+```
+
+`blsmeta` is an optional Bayesian comparator, not a required dependency of the rendered tutorial. If it is installed, fit it only to the matched subset and assess sampler diagnostics before interpreting any study-scale estimate; the present reproducible primary results do not rely on it.
+
+## Diagnostics and interpretation
+
+```{r}
+#| label: study-level-diagnostics
+#| tbl-cap: "Diagnostics for the full-data Bayesian primary models."
+
+knitr::kable(
+  transform(
+    study_level_diagnostics,
+    max_rhat = round(max_rhat, 3), min_bulk_ess = round(min_bulk_ess)
+  ),
+  row.names = FALSE
+)
+```
+
+The full-data lnRR model addresses study-level variation directly. In contrast, the stronger lnCVR residual-scale contrast describes wider variability among comparisons within the represented studies. It supports a conditional statement about within-study consistency, not an unconditional claim about transferability to new studies. The analysis does not establish a causal mechanism for either component.
+
 # Software and package versions
 
 ```{r}
 #| echo: false
 
-sessionInfo()
+cat(paste(trimws(capture.output(sessionInfo()), which = "right"), collapse = "\n"))
 
 ```
 
