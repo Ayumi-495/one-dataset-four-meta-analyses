@@ -106,7 +106,7 @@ function checkTechnical() {
 function checkPipeline() {
   assert(existsSync(scriptPath), "study-level pipeline script is missing");
   const script = readFileSync(scriptPath, "utf8");
-  for (const text of ["measure = \"CVR\"", "correct = TRUE", "fit_brms_category_model", "fit_metafor_category_model", "fit_glmmtmb_category_model", "fit_drmtmb_direct_model", "run_blsmeta_sensitivity", "saveRDS"]) {
+  for (const text of ["measure = \"CVR\"", "correct = TRUE", "fit_brms_category_model", "fit_metafor_category_model", "fit_glmmtmb_category_model", "fit_drmtmb_direct_model", "run_blsmeta_sensitivity", "BLSMETA SENSITIVITY COMPLETED", "saveRDS"]) {
     assert(script.includes(text), `pipeline does not contain ${text}`);
   }
   assert(existsSync(artifactPath), "regenerated study-level artifact is missing");
@@ -127,7 +127,7 @@ function checkBlsmeta() {
   const provenance = readFileSync(blsmetaProvenancePath, "utf8");
   for (const text of [
     "Historical `blsmeta` sensitivity output",
-    "Every chain set **failed** its predeclared convergence criteria",
+    "Both `blsmeta` fits **failed** the predeclared convergence criteria",
     "claim-bearing results and are not evidence",
     "study-level-blsmeta-historical-results",
     "blsmeta_sensitivity_verified_outputs.csv"
@@ -147,7 +147,7 @@ function checkBlsmeta() {
 function checkRendered() {
   assert(existsSync(htmlPath), "revision/index.html is missing");
   const html = readFileSync(htmlPath, "utf8");
-  for (const text of ["Where does heterogeneity occur?", "General multilevel location", "Categorical random coefficients", "blsmeta", "Historical <code>blsmeta</code> sensitivity output", "FAILED: study-ratio target criteria not met", "Posterior plant-to-animal SD ratios", "2.18", "1.67"]) {
+  for (const text of ["Where does heterogeneity occur?", "General multilevel location", "Categorical random coefficients", "blsmeta", "Historical <code>blsmeta</code> sensitivity output", "FAILED: study-ratio target criteria not met", "1.11 [0.89, 1.40]", "2.50 [1.00, 6.60]", "2.11 [1.47, 3.03]", "0.85 [0.20, 3.84]", "Posterior plant-to-animal SD ratios", "2.18", "1.67"]) {
     assert(html.includes(text), `rendered tutorial is missing ${text}`);
   }
   for (const forbidden of ["lower stability", "strongly governs the predictability", "stability gap"]) {

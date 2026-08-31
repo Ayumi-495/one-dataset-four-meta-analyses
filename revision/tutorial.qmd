@@ -2942,7 +2942,7 @@ versioned provenance record is
 necessary because a fresh fit currently requires a compatible `rjags`/JAGS 4.x
 toolchain, whereas current Homebrew JAGS 5 is not compatible with `rjags`.
 
-Every chain set **failed** its predeclared convergence criteria.  These values
+Both `blsmeta` fits **failed** the predeclared convergence criteria.  These values
 are shown only to document the requested sensitivity analysis: they are not
 claim-bearing results and are not evidence for or against the primary full-data
 `brms` conclusions.

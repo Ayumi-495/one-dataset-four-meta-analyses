@@ -500,7 +500,7 @@ if (sys.nframe() == 0L) {
     dir.create(here::here("Rdata"), showWarnings = FALSE, recursive = TRUE)
     saveRDS(run_blsmeta_sensitivity(),
             here::here("Rdata", "blsmeta_sensitivity.rds"))
-    message("BLSMETA SENSITIVITY PASSED")
+    message("BLSMETA SENSITIVITY COMPLETED")
   } else {
     artifacts <- run_study_level_pipeline(fit_bayesian = "--fit-bayesian" %in% args)
     dir.create(here::here("Rdata"), showWarnings = FALSE, recursive = TRUE)
