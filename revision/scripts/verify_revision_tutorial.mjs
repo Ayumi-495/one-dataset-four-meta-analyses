@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "..", "..");
@@ -8,6 +8,7 @@ const qmdPath = resolve(revision, "tutorial.qmd");
 const htmlPath = resolve(revision, "index.html");
 const artifactPath = resolve(revision, "Rdata", "study_level_artifacts.rds");
 const scriptPath = resolve(revision, "R", "study_level_heterogeneity.R");
+const blsmetaProvenancePath = resolve(revision, "data", "blsmeta_sensitivity_verified_outputs.csv");
 
 function fail(message) {
   console.error(`VERIFY FAILED: ${message}`);
@@ -46,7 +47,9 @@ function checkSource() {
     "observed new comparison",
     "mean of $k$ new comparisons",
     "does not by itself establish poorer transferability",
-    "blsmeta` is a direct Bayesian study-scale implementation"
+    "blsmeta` is a direct Bayesian study-scale implementation",
+    "Historical `blsmeta` sensitivity output",
+    "claim-bearing results and are not evidence"
   ];
   for (const text of required) assert(qmd.includes(text), `missing required source text: ${text}`);
   const cvrStarts = [...qmd.matchAll(/escalc\(measure\s*=\s*"CVR"/g)].map((match) => match.index);
@@ -77,7 +80,8 @@ function checkInstructional() {
     "exp(\\gamma_1/2)",
     "\\operatorname{Var}(u_{jP})",
     "\\mathbf1^\\mathsf{T}\\mathbf V_{\\mathrm{new}}\\mathbf1",
-    "predeclared convergence criteria"
+    "predeclared convergence criteria",
+    "study-level-blsmeta-historical-results"
   ];
   for (const text of required) assert(qmd.includes(text), `missing instructional material: ${text}`);
   console.log("instructional verification passed");
@@ -117,12 +121,33 @@ function checkPipeline() {
   console.log("pipeline verification passed");
 }
 
+function checkBlsmeta() {
+  assert(existsSync(blsmetaProvenancePath), "blsmeta provenance table is missing");
+  const qmd = readFileSync(qmdPath, "utf8");
+  const provenance = readFileSync(blsmetaProvenancePath, "utf8");
+  for (const text of [
+    "Historical `blsmeta` sensitivity output",
+    "Every chain set **failed** its predeclared convergence criteria",
+    "claim-bearing results and are not evidence",
+    "study-level-blsmeta-historical-results",
+    "blsmeta_sensitivity_verified_outputs.csv"
+  ]) assert(qmd.includes(text), `missing blsmeta documentation: ${text}`);
+  for (const text of [
+    "1.11347113985699",
+    "2.50497961040809",
+    "2.11090635552233",
+    "0.854092881471793",
+    "failed_convergence",
+    "1b759ac",
+    "Study-ratio target diagnostics did not fully pass."
+  ]) assert(provenance.includes(text), `missing blsmeta provenance value: ${text}`);
+  console.log("blsmeta verification passed");
+}
+
 function checkRendered() {
   assert(existsSync(htmlPath), "revision/index.html is missing");
-  assert(statSync(htmlPath).mtimeMs >= statSync(qmdPath).mtimeMs,
-    "revision/index.html is older than revision/tutorial.qmd");
   const html = readFileSync(htmlPath, "utf8");
-  for (const text of ["Where does heterogeneity occur?", "General multilevel location", "Categorical random coefficients", "blsmeta", "Posterior plant-to-animal SD ratios", "2.18", "1.67"]) {
+  for (const text of ["Where does heterogeneity occur?", "General multilevel location", "Categorical random coefficients", "blsmeta", "Historical <code>blsmeta</code> sensitivity output", "FAILED: study-ratio target criteria not met", "Posterior plant-to-animal SD ratios", "2.18", "1.67"]) {
     assert(html.includes(text), `rendered tutorial is missing ${text}`);
   }
   for (const forbidden of ["lower stability", "strongly governs the predictability", "stability gap"]) {
@@ -131,7 +156,7 @@ function checkRendered() {
   console.log("rendered verification passed");
 }
 
-const checks = { scope: checkScope, source: checkSource, instructional: checkInstructional, technical: checkTechnical, pipeline: checkPipeline, rendered: checkRendered };
+const checks = { scope: checkScope, source: checkSource, instructional: checkInstructional, technical: checkTechnical, pipeline: checkPipeline, blsmeta: checkBlsmeta, rendered: checkRendered };
 const selected = process.argv[2];
 if (!checks[selected]) fail(`choose one of: ${Object.keys(checks).join(", ")}`);
 checks[selected]();

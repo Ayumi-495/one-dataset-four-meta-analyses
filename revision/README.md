@@ -53,3 +53,12 @@ Rscript R/study_level_heterogeneity.R --fit-blsmeta
 This writes `Rdata/blsmeta_sensitivity.rds` and reports ratios only if the
 post-warmup split-R-hat and effective-sample-size criteria pass. It is not read
 by the primary rendered tutorial.
+
+The rendered tutorial also displays
+`data/blsmeta_sensitivity_verified_outputs.csv`. This is a four-row,
+provenance-linked transcription of the historical matched-subset `blsmeta`
+ratios and diagnostics from commit `1b759ac` (the named historical
+`model_summary.csv` and `diagnostics.csv` paths are recorded in the file).
+All four historical chains failed the predeclared convergence criteria, so the
+table documents the sensitivity analysis only; it is not regenerated during
+rendering and is not primary evidence.

@@ -6,7 +6,7 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="dcterms.date" content="2026-08-28">
+<meta name="dcterms.date" content="2026-08-31">
 
 <title>TUTORIAL: One dataset, four meta-analyses: synthesising mean effects, within-population variability, and between-population heterogeneity in ecology</title>
 <style>
@@ -2393,7 +2393,10 @@ window.Quarto = {
   <li><a href="#full-data-categorical-analyses-in-three-packages" id="toc-full-data-categorical-analyses-in-three-packages" class="nav-link" data-scroll-target="#full-data-categorical-analyses-in-three-packages">Full-data categorical analyses in three packages</a></li>
   </ul></li>
   <li><a href="#prediction-targets" id="toc-prediction-targets" class="nav-link" data-scroll-target="#prediction-targets">Prediction targets</a></li>
-  <li><a href="#matched-subset-direct-study-scale-bridge" id="toc-matched-subset-direct-study-scale-bridge" class="nav-link" data-scroll-target="#matched-subset-direct-study-scale-bridge">Matched-subset direct study-scale bridge</a></li>
+  <li><a href="#matched-subset-direct-study-scale-bridge" id="toc-matched-subset-direct-study-scale-bridge" class="nav-link" data-scroll-target="#matched-subset-direct-study-scale-bridge">Matched-subset direct study-scale bridge</a>
+  <ul>
+  <li><a href="#historical-blsmeta-sensitivity-output" id="toc-historical-blsmeta-sensitivity-output" class="nav-link" data-scroll-target="#historical-blsmeta-sensitivity-output">Historical <code>blsmeta</code> sensitivity output</a></li>
+  </ul></li>
   <li><a href="#diagnostics-and-interpretation" id="toc-diagnostics-and-interpretation" class="nav-link" data-scroll-target="#diagnostics-and-interpretation">Diagnostics and interpretation</a></li>
   </ul></li>
   <li><a href="#software-and-package-versions" id="toc-software-and-package-versions" class="nav-link" data-scroll-target="#software-and-package-versions">Software and package versions</a></li>
@@ -2418,7 +2421,7 @@ window.Quarto = {
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">August 28, 2026</p>
+      <p class="date">August 31, 2026</p>
     </div>
   </div>
   
@@ -5358,17 +5361,99 @@ y_{ij}=\beta_A I(g_{ij}=A)+\beta_P I(g_{ij}=P)
 </details>
 </div>
 <p><code>blsmeta</code> convergence problems are reported as a diagnostic finding, not silently discarded: the previously attempted matched-subset chains failed the predeclared convergence criteria. Its estimates are therefore sensitivity results only, and neither support nor contradict the primary full-data <code>brms</code> inference. The primary rendered results do not depend on <code>blsmeta</code> being installed.</p>
+<section id="historical-blsmeta-sensitivity-output" class="level3">
+<h3 class="anchored" data-anchor-id="historical-blsmeta-sensitivity-output">Historical <code>blsmeta</code> sensitivity output</h3>
+<p>The following table documents the previously fitted direct Bayesian study-scale sensitivity analysis, rather than a new fit made while rendering this tutorial. Its four ratios are transcribed from historical commit <code>1b759ac</code>, <code>results/study_level_heterogeneity/model_summary.csv</code>; the convergence diagnostics are transcribed from the corresponding <code>diagnostics.csv</code>. The versioned provenance record is <code>data/blsmeta_sensitivity_verified_outputs.csv</code>. This explicit record is necessary because a fresh fit currently requires a compatible <code>rjags</code>/JAGS 4.x toolchain, whereas current Homebrew JAGS 5 is not compatible with <code>rjags</code>.</p>
+<p>Every chain set <strong>failed</strong> its predeclared convergence criteria. These values are shown only to document the requested sensitivity analysis: they are not claim-bearing results and are not evidence for or against the primary full-data <code>brms</code> conclusions.</p>
+<div class="cell" data-tbl-cap="Historical blsmeta sensitivity SD ratios and diagnostics. All rows failed convergence and are documentation only.">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>blsmeta_display <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Response =</span> blsmeta_historical<span class="sc">$</span>response,</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Component =</span> <span class="fu">ifelse</span>(</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    blsmeta_historical<span class="sc">$</span>component <span class="sc">==</span> <span class="st">&quot;residual_sd&quot;</span>,</span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;Residual SD&quot;</span>, <span class="st">&quot;Study SD&quot;</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Plant-to-animal SD ratio [95% CrI]</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(</span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;%.2f [%.2f, %.2f]&quot;</span>,</span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>    blsmeta_historical<span class="sc">$</span>estimate,</span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>    blsmeta_historical<span class="sc">$</span>lower,</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>    blsmeta_historical<span class="sc">$</span>upper</span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Max parameter R-hat</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.3f&quot;</span>, blsmeta_historical<span class="sc">$</span>max_parameter_rhat),</span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Min parameter ESS</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sprintf</span>(<span class="st">&quot;%.0f&quot;</span>, blsmeta_historical<span class="sc">$</span>min_parameter_ess),</span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Convergence status</span><span class="st">`</span> <span class="ot">=</span> <span class="st">&quot;FAILED: study-ratio target criteria not met&quot;</span>,</span>
+<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb49-18"><a href="#cb49-18" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(blsmeta_display, <span class="at">row.names =</span> <span class="cn">FALSE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Historical blsmeta sensitivity SD ratios and diagnostics. All rows failed convergence and are documentation only.</caption>
+<colgroup>
+<col style="width: 6%">
+<col style="width: 8%">
+<col style="width: 25%">
+<col style="width: 14%">
+<col style="width: 13%">
+<col style="width: 31%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Response</th>
+<th style="text-align: left;">Component</th>
+<th style="text-align: left;">Plant-to-animal SD ratio [95% CrI]</th>
+<th style="text-align: left;">Max parameter R-hat</th>
+<th style="text-align: left;">Min parameter ESS</th>
+<th style="text-align: left;">Convergence status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">Residual SD</td>
+<td style="text-align: left;">1.11 [0.89, 1.40]</td>
+<td style="text-align: left;">1.144</td>
+<td style="text-align: left;">46</td>
+<td style="text-align: left;">FAILED: study-ratio target criteria not met</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnRR</td>
+<td style="text-align: left;">Study SD</td>
+<td style="text-align: left;">2.50 [1.00, 6.60]</td>
+<td style="text-align: left;">1.144</td>
+<td style="text-align: left;">46</td>
+<td style="text-align: left;">FAILED: study-ratio target criteria not met</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">Residual SD</td>
+<td style="text-align: left;">2.11 [1.47, 3.03]</td>
+<td style="text-align: left;">1.010</td>
+<td style="text-align: left;">1479</td>
+<td style="text-align: left;">FAILED: study-ratio target criteria not met</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">lnCVR</td>
+<td style="text-align: left;">Study SD</td>
+<td style="text-align: left;">0.85 [0.20, 3.84]</td>
+<td style="text-align: left;">1.010</td>
+<td style="text-align: left;">1479</td>
+<td style="text-align: left;">FAILED: study-ratio target criteria not met</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
 </section>
 <section id="diagnostics-and-interpretation" class="level2">
 <h2 class="anchored" data-anchor-id="diagnostics-and-interpretation">Diagnostics and interpretation</h2>
 <div class="cell" data-tbl-cap="Diagnostics for the full-data Bayesian primary models.">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
-<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transform</span>(</span>
-<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>    study_level_diagnostics,</span>
-<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_rhat =</span> <span class="fu">round</span>(max_rhat, <span class="dv">3</span>), <span class="at">min_bulk_ess =</span> <span class="fu">round</span>(min_bulk_ess)</span>
-<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
-<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transform</span>(</span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a>    study_level_diagnostics,</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">max_rhat =</span> <span class="fu">round</span>(max_rhat, <span class="dv">3</span>), <span class="at">min_bulk_ess =</span> <span class="fu">round</span>(min_bulk_ess)</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <caption>Diagnostics for the full-data Bayesian primary models.</caption>

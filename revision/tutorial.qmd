@@ -2594,6 +2594,16 @@ study_level_predictions <- study_level_artifacts$predictions
 study_level_diagnostics <- study_level_artifacts$diagnostics
 study_level_frequentist <- study_level_artifacts$frequentist
 matched_data <- study_level_artifacts$matched_data
+blsmeta_historical <- utils::read.csv(
+  "data/blsmeta_sensitivity_verified_outputs.csv",
+  stringsAsFactors = FALSE
+)
+stopifnot(
+  nrow(blsmeta_historical) == 4L,
+  identical(sort(blsmeta_historical$response), c("lnCVR", "lnCVR", "lnRR", "lnRR")),
+  all(blsmeta_historical$convergence_status == "failed_convergence"),
+  all(blsmeta_historical$source_commit == "1b759ac")
+)
 
 format_ratio <- function(response_name, component_name) {
   row <- study_level_ratios[
@@ -2919,6 +2929,47 @@ predeclared convergence criteria.  Its estimates are therefore sensitivity
 results only, and neither support nor contradict the primary full-data `brms`
 inference.  The primary rendered results do not depend on `blsmeta` being
 installed.
+
+### Historical `blsmeta` sensitivity output
+
+The following table documents the previously fitted direct Bayesian study-scale
+sensitivity analysis, rather than a new fit made while rendering this tutorial.
+Its four ratios are transcribed from historical commit `1b759ac`,
+`results/study_level_heterogeneity/model_summary.csv`; the convergence
+diagnostics are transcribed from the corresponding `diagnostics.csv`.  The
+versioned provenance record is
+`data/blsmeta_sensitivity_verified_outputs.csv`.  This explicit record is
+necessary because a fresh fit currently requires a compatible `rjags`/JAGS 4.x
+toolchain, whereas current Homebrew JAGS 5 is not compatible with `rjags`.
+
+Every chain set **failed** its predeclared convergence criteria.  These values
+are shown only to document the requested sensitivity analysis: they are not
+claim-bearing results and are not evidence for or against the primary full-data
+`brms` conclusions.
+
+```{r}
+#| label: study-level-blsmeta-historical-results
+#| tbl-cap: "Historical blsmeta sensitivity SD ratios and diagnostics. All rows failed convergence and are documentation only."
+
+blsmeta_display <- data.frame(
+  Response = blsmeta_historical$response,
+  Component = ifelse(
+    blsmeta_historical$component == "residual_sd",
+    "Residual SD", "Study SD"
+  ),
+  `Plant-to-animal SD ratio [95% CrI]` = sprintf(
+    "%.2f [%.2f, %.2f]",
+    blsmeta_historical$estimate,
+    blsmeta_historical$lower,
+    blsmeta_historical$upper
+  ),
+  `Max parameter R-hat` = sprintf("%.3f", blsmeta_historical$max_parameter_rhat),
+  `Min parameter ESS` = sprintf("%.0f", blsmeta_historical$min_parameter_ess),
+  `Convergence status` = "FAILED: study-ratio target criteria not met",
+  check.names = FALSE
+)
+knitr::kable(blsmeta_display, row.names = FALSE)
+```
 
 ## Diagnostics and interpretation
 
