@@ -2618,88 +2618,118 @@ format_ratio <- function(response_name, component_name) {
 
 ## Starting comparator: residual location--scale model
 
-The residual location--scale model is the useful starting comparator.  It
-allows fertiliser category to change the residual SD among effect sizes within
-studies, while retaining one common SD for the distribution of study means:
+Start with the residual location--scale model fitted above.
+It allows animal and plant fertilisers to have different residual SDs, but keeps the between-study SD the same for both.
+Let $i$ identify an effect size, $j$ its study, and $g$ its fertiliser category ($A$ for animal, $P$ for plant).
+The observed effect size is
 
 $$
-y_{ij}=\mu_{g[ij]}+u_j+e_{ij}+m_{ij},\qquad
-u_j\sim\mathcal N(0,\tau^2),\quad
-e_{ij}\sim\mathcal N(0,\sigma_{g[ij]}^2),\quad
-m_{ij}\sim\mathcal N(0,v_{ij}).
+y_{ij}=\mu_g+u_j+e_{ij}+m_{ij}.
 $$
 
-Here $\tau$ is between-study heterogeneity and $\sigma_g$ is residual
-within-study heterogeneity.  A category difference in $\sigma_g$ is therefore
-not, by itself, a difference in transferability to a new study.  The original
-residual model is available in `metafor`, `glmmTMB`, and `brms` through a
-category-specific random-effect or dispersion/residual-scale component.
-
-## General multilevel location--scale model
-
-For the extension, the two variance components receive separate scale
-sub-models:
+Here $\mu_g$ is the expected effect for that fertiliser category, $u_j$ is the study's departure from that expectation, $e_{ij}$ is the effect's remaining departure within the study, and $m_{ij}$ is sampling error.
+The random departures are centred on zero:
 
 $$
 \begin{aligned}
-y_{ij} &= \mathbf{x}_{ij}^{\mathsf T}\boldsymbol\beta+u_j+e_{ij}+m_{ij},\\
-u_j &\sim \mathcal N(0,\tau_j^2),\qquad
-e_{ij}\sim\mathcal N(0,\sigma_{ij}^2),\qquad
-\mathbf m\sim\mathcal N(\mathbf0,\mathbf V),\\
-\log(\tau_j) &= \mathbf z_j^{\mathsf T}\boldsymbol\gamma_u,\qquad
-\log(\sigma_{ij})=\mathbf w_{ij}^{\mathsf T}\boldsymbol\gamma_e.
+u_j &\sim \mathcal N(0,\tau^2), &&\text{between studies},\\
+e_{ij} &\sim \mathcal N(0,\sigma_g^2), &&\text{within studies},\\
+m_{ij} &\sim \mathcal N(0,v_{ij}), &&\text{sampling error}.
 \end{aligned}
 $$
 
-The location, study-scale, and residual-scale moderators need not be the same.
-A study-scale predictor must be constant within study; a residual-scale
-predictor may vary among effect sizes.  With correlated sampling errors, the
-scalar $v_{ij}$ is replaced by the sampling covariance matrix $\mathbf V$.
+The second argument of $\mathcal N$ is a variance: $\tau$ and $\sigma_g$ are SDs, whereas $v_{ij}$ is the known sampling variance.
+Only the residual SD, $\sigma_g$, changes with fertiliser category here.
+A difference in this component alone does not establish a difference in between-study heterogeneity.
+The code above fits this starting model using `metafor`, `glmmTMB`, and `brms`.
+
+## General multilevel location--scale model
+
+We can model the between-study SD in the same way as the residual SD.
+Written with one moderator in each sub-model, the extension is
+
+$$
+\begin{aligned}
+y_{ij} &= \beta_0+\beta_1x_{ij}+u_j+e_{ij}+m_{ij},
+&&\text{expected effect and departures},\\
+\log(\tau_j) &= \gamma_{u0}+\gamma_{u1}z_j,
+&&\text{between-study SD},\\
+\log(\sigma_{ij}) &= \gamma_{e0}+\gamma_{e1}w_{ij},
+&&\text{within-study SD}.
+\end{aligned}
+$$
+
+The random departures now have distributions $u_j\sim\mathcal N(0,\tau_j^2)$ and $e_{ij}\sim\mathcal N(0,\sigma_{ij}^2)$.
+The three lines ask different questions: does the expected effect change, does the spread among studies change, and does the spread within studies change?
+The moderators $x_{ij}$, $z_j$, and $w_{ij}$ can be the same variable or different variables; further moderator terms can be added to each line.
+The coefficients $\beta_1$, $\gamma_{u1}$, and $\gamma_{e1}$ describe those three changes.
+Both scale sub-models use log SD, so exponentiating a scale coefficient gives the multiplicative change in that SD per unit of its moderator.
+
+Because $u_j$ is one shared study effect, its scale predictor $z_j$ must have one value per study.
+The residual-scale predictor $w_{ij}$ can vary among effects within a study.
+For fertiliser, the direct study-scale formulation therefore uses the 30 single-category studies.
+The next formulation also accommodates the six studies containing both categories.
+Sampling error remains separate: its known variances, and any sampling covariances, belong in the sampling covariance matrix `V` supplied to the model.
 
 ## Categorical random coefficients are a location--scale special case
 
-For animal ($A$) and plant ($P$) fertiliser, category-specific study random
-coefficients can be written as
+Instead of one shared study effect $u_j$, allow a study to have an animal-fertiliser effect $u_{jA}$ and a plant-fertiliser effect $u_{jP}$.
+Each observation uses the effect for its own category:
 
 $$
-y_{ij}=\beta_A I(g_{ij}=A)+\beta_P I(g_{ij}=P)
-+u_{jA}I(g_{ij}=A)+u_{jP}I(g_{ij}=P)+e_{ij}+m_{ij},
+y_{ij}=\begin{cases}
+\mu_A+u_{jA}+e_{ij}+m_{ij}, & \text{animal fertiliser},\\
+\mu_P+u_{jP}+e_{ij}+m_{ij}, & \text{plant fertiliser}.
+\end{cases}
 $$
 
-with $\operatorname{SD}(u_{jA})=\tau_A$ and
-$\operatorname{SD}(u_{jP})=\tau_P$.  This is both a categorical random-slope
-model and a heteroscedastic random-effects model.  Its diagonal version is
-equivalent to the categorical scale regression
+The study SDs are $\operatorname{SD}(u_{jA})=\tau_A$ and $\operatorname{SD}(u_{jP})=\tau_P$; the residual SDs are $\sigma_A$ and $\sigma_P$.
+This is called a *categorical random-coefficient model*.
+It is also *heteroscedastic*: it allows the amount of variation to differ between categories.
+
+The two study SDs can instead be expressed through scale coefficients:
 
 $$
-\log(\tau_g)=\gamma_0+\gamma_1I(g=P),
+\begin{aligned}
+\log(\tau_A)&=\gamma_0, & \tau_A&=\exp(\gamma_0),\\
+\log(\tau_P)&=\gamma_0+\gamma_1, & \tau_P&=\exp(\gamma_0+\gamma_1).
+\end{aligned}
 $$
 
-so that $\tau_A=\exp(\gamma_0)$ and
-$\tau_P=\exp(\gamma_0+\gamma_1)$.  Direct scale regression is more general:
-it readily accommodates continuous predictors or several predictors in a
-scale sub-model.
+These are two ways to describe the same pair of category-specific SDs: estimating them separately or describing their difference on the log-SD scale.
+They give the same likelihood on the single-category subset when the location, residual, and sampling-error specifications match.
+For studies containing both categories, the relationship between $u_{jA}$ and $u_{jP}$ must also be specified; two SDs alone do not define that covariance.
 
-Under conventional intercept--slope coding, in contrast, the animal study
-effect is $u_{0j}$ and the plant study effect is $u_{0j}+u_{1j}$.  Thus
+A familiar alternative is random-intercept and random-slope coding, with animal coded 0 and plant coded 1.
+The study's animal effect is then $u_{0j}$, and its plant effect is $u_{0j}+u_{1j}$.
+The random slope $u_{1j}$ is the study-specific departure in the plant-minus-animal contrast, not the plant effect itself.
+Consequently,
 
 $$
 \operatorname{Var}(u_{jP})=\operatorname{Var}(u_{0j})+
-\operatorname{Var}(u_{1j})+2\operatorname{Cov}(u_{0j},u_{1j}),
+\operatorname{Var}(u_{1j})+2\operatorname{Cov}(u_{0j},u_{1j}).
 $$
 
-so the random-slope variance alone is **not** the plant-category variance.
-Using `0 + fertilizer` makes the two category-specific SDs directly visible.
+Here $\operatorname{Cov}$ measures whether the study-specific animal effect and plant-minus-animal departure tend to vary together.
+The random-slope variance alone is therefore **not** the plant-category variance.
+Using `0 + fertilizer` gives the animal and plant random coefficients directly, making their SDs easier to read.
+Changing the coding preserves the model only if the covariance assumptions are preserved too.
 
 ## Primary full-data categorical model
 
-For each response $y_i$ (lnRR or lnCVR), the primary model uses category-specific study and residual SDs:
+For both lnRR and lnCVR, we use the category-specific formulation to retain all 318 effects from 36 studies.
+For a single effect in category $g$, the marginal distribution is
 
-$$y_i \sim \mathcal{N}(\mu_{c[i]},\; v_i + \tau_{c[i]}^2 + \sigma_{c[i]}^2),$$
+$$
+y_{ij}\sim\mathcal N\!\left(\mu_g,\;\tau_g^2+\sigma_g^2+v_{ij}\right).
+$$
 
-where $v_i$ is the known sampling variance, $\tau_c$ is the study-level SD, and $\sigma_c$ is the residual SD for fertiliser category $c$. The covariance between animal and plant study effects is fixed at zero (a diagonal study covariance). This is a stated modelling restriction, not evidence that the correlation is zero.
+This adds between-study variance, within-study variance, and sampling variance after averaging over the unobserved random effects.
+It does not make the observations independent: effects in the same study and fertiliser category share $u_{jg}$.
 
-This is a categorical random-coefficient model: in `brms` the study term is written `(0 + fertilizer || study_ID)`.  The covariance between category-specific study effects is fixed to zero.  Estimating their correlation would require the six mixed-category studies to carry substantially more information than they do here; the unstructured fit is boundary-prone and is not interpreted.
+We fix the covariance between $u_{jA}$ and $u_{jP}$ to zero (a diagonal study covariance), written `(0 + fertilizer || study_ID)` in `brms`.
+This is an assumption, not evidence that their correlation is zero.
+Only six studies contain both fertiliser categories and can inform that correlation; the exploratory model estimating it reached a boundary and is not interpreted.
 
 The reproducible script [`R/study_level_heterogeneity.R`](R/study_level_heterogeneity.R) recalculates lnCVR with `correct = TRUE`, fits the full-data Bayesian model with `brms`, builds posterior ratio and prediction tables, and saves the artifact read above. It deliberately does not download or silently create inputs during rendering.
 
@@ -2814,27 +2844,43 @@ a prior to reproduce a desired interval.
 
 ## Prediction targets
 
-For a latent new comparison, the predictive variance includes the two
-heterogeneity components,
+For a latent new comparison (the underlying effect before sampling error), the predictive variance includes the two heterogeneity components for its fertiliser category $g$:
 
-$$\tau_c^2+\sigma_c^2.$$
+$$\tau_g^2+\sigma_g^2.$$
 
-For an observed new comparison, it also includes sampling variation,
+For an observed new comparison, it also includes its sampling variance $v_{\mathrm{new}}$:
 
-$$\tau_c^2 + \sigma_c^2 + v_i.$$
+$$\tau_g^2+\sigma_g^2+v_{\mathrm{new}}.$$
 
-For the mean of $k$ new comparisons from one new study, residual and sampling terms are averaged but the study term is not:
+For the mean of $k$ new comparisons from one new study and the same fertiliser category, let $v_1,\ldots,v_k$ be their sampling variances.
+If their residual departures and sampling errors are independent across comparisons, the variance of the mean is
 
 $$
-\tau_c^2+\frac{\sigma_c^2}{k}+
-\frac{\mathbf1^\mathsf{T}\mathbf V_{\mathrm{new}}\mathbf1}{k^2}.
+\tau_g^2+\frac{\sigma_g^2}{k}+
+\frac{v_1+v_2+\cdots+v_k}{k^2}.
 $$
 
-For independent equal-variance comparisons, the final term reduces to $v/k$.
+The three terms are between-study variance, averaged within-study variance, and the sampling variance of the mean.
+The denominator is $k^2$ because dividing a sum by $k$ divides its variance by $k^2$.
+Averaging comparisons reduces the independent residual and sampling contributions, but not the study contribution: all comparisons share the same study effect.
+When each comparison has the same sampling variance $v$, the final term simplifies to $v/k$.
+
+If sampling errors are correlated, for example because comparisons share a control group, also add
+
+$$
+\frac{2}{k^2}\sum_{r<s}c_{rs}.
+$$
+
+Here $c_{rs}=\operatorname{Cov}(m_r,m_s)$ is the sampling-error covariance between comparisons $r$ and $s$, and the sum includes each distinct pair once.
+The factor of 2 comes from the variance-of-a-sum rule: each pair contributes twice its covariance.
+For two comparisons, the sampling contribution is therefore $(v_1+v_2+2c_{12})/4$.
+Positive sampling covariances make averaging less effective at reducing sampling uncertainty.
+
+These variance formulas are conditional on the model parameters; the reported prediction intervals also include uncertainty in the expected effects and SDs.
 The script evaluates these scenarios at a **separate median sampling variance
 for each response-by-fertiliser category**, rather than one median pooled over
-fertiliser categories.  They are explicit prediction scenarios, not generic
-claims about every future data set.
+fertiliser categories, using independent equal-variance sampling errors.
+They are explicit prediction scenarios, not generic claims about every future data set.
 
 ```{r}
 #| label: study-level-predictions

@@ -79,11 +79,16 @@ function checkInstructional() {
     "Only six studies contain both fertiliser categories",
     "exp(\\gamma_1/2)",
     "\\operatorname{Var}(u_{jP})",
-    "\\mathbf1^\\mathsf{T}\\mathbf V_{\\mathrm{new}}\\mathbf1",
+    "\\frac{v_1+v_2+\\cdots+v_k}{k^2}",
+    "\\frac{2}{k^2}\\sum_{r<s}c_{rs}",
+    "each distinct pair once",
     "predeclared convergence criteria",
     "study-level-blsmeta-historical-results"
   ];
   for (const text of required) assert(qmd.includes(text), `missing instructional material: ${text}`);
+  const extension = qmd.slice(qmd.indexOf("# Extension: Where does heterogeneity occur?"));
+  assert(!/\\(?:mathbf|boldsymbol|vec)\b/.test(extension),
+    "vector notation remains in the extension");
   console.log("instructional verification passed");
 }
 
